@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'users.TaxiUser'
 
 LANGUAGE_CODE = 'en-us'
 
