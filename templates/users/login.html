@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Вход в аккаунт
+{% endblock %}
+
+{% block content %}
+    {% include "users/includes/form.html" with form_name='Вход в аккаунт' button_text='Войти' %}
+{% endblock %}
