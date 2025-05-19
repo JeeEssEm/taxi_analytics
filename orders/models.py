@@ -7,12 +7,15 @@ from reviews.models import TaxiReview
 
 
 class TaxiOrder(models.Model):
-    driver_id = models.ForeignKey(TaxiDriver, null=False)
-    car_id = models.ForeignKey(TaxiCar, null=False)
-    cliend_id = models.ForeignKey(TaxiUser, null=False)
-    review_id = models.ForeignKey(TaxiReview)
-    
-    STATUSES = {'CANCELLED': 'Cancelled', 'ON_THE_WAY': 'On the way', 'DONE': 'done'}
+    driver_id = models.ForeignKey(TaxiDriver, null=False,
+                                  on_delete=models.CASCADE)
+    car_id = models.ForeignKey(TaxiCar, null=False, on_delete=models.CASCADE)
+    cliend_id = models.ForeignKey(TaxiUser, null=False,
+                                  on_delete=models.CASCADE)
+    review_id = models.ForeignKey(TaxiReview, on_delete=models.CASCADE)
+
+    STATUSES = {'CANCELLED': 'Cancelled', 'ON_THE_WAY': 'On the way',
+                'DONE': 'done'}
     status = models.CharField(choices=STATUSES)
 
     pickup_datetime = models.DateTimeField()
