@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оценка поездки | Такси-сервис</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <!-- Шапка -->
+        <header class="mb-8 text-center">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Оцените поездку</h1>
+            <p class="text-gray-600">Поездка #A7B92C • 21 апреля 2024</p>
+        </header>
+
+        <!-- Форма оценки -->
+        <form id="feedbackForm" class="space-y-6">
+            <!-- Рейтинг -->
+            <div class="text-center">
+                <div class="flex justify-center space-x-2 mb-4" id="starRating">
+                    <!-- Звёзды будут добавлены через JS -->
+                </div>
+                <p class="text-sm text-gray-500" id="ratingText">Нажмите для оценки</p>
+            </div>
+
+            <!-- Быстрый выбор -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">Отметьте, если применимо:</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
+                        <span>Вежливый водитель</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
+                        <span>Чистый салон</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
+                        <span>Быстрая подача</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
+                        <span>Комфортная езда</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Текстовый отзыв -->
+            <div>
+                <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Ваш отзыв (необязательно)</label>
+                <textarea id="comment" rows="4" 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                          placeholder="Что особенно понравилось или можно улучшить?"></textarea>
+                <p class="text-right text-xs text-gray-500 mt-1"><span id="charCount">0</span>/500</p>
+            </div>
+
+            <!-- Кнопка (теперь синяя) -->
+            <button type="submit" 
+                    class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center space-x-2">
+                <i class="fas fa-paper-plane"></i>
+                <span>Отправить отзыв</span>
+            </button>
+        </form>
+
+        <!-- Блок благодарности (скрыт по умолчанию) -->
+        <div id="thankYouMessage" class="hidden text-center py-10">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-blue-600 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Спасибо за отзыв!</h2>
+            <p class="text-gray-600 mb-6">Ваше мнение помогает нам стать лучше</p>
+            <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Вернуться на главную</a>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация звёздного рейтинга
+        const starRating = document.getElementById('starRating');
+        const ratingText = document.getElementById('ratingText');
+        const ratingTexts = ['Ужасно', 'Плохо', 'Нормально', 'Хорошо', 'Отлично'];
+        
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('div');
+            star.className = 'text-3xl text-gray-300 cursor-pointer star';
+            star.dataset.value = i;
+            star.innerHTML = '★';
+            star.addEventListener('mouseover', hoverStar);
+            star.addEventListener('click', setRating);
+            starRating.appendChild(star);
+        }
+
+        function hoverStar(e) {
+            const hoverValue = e.target.dataset.value;
+            const stars = document.querySelectorAll('.star');
+            
+            stars.forEach(star => {
+                star.style.color = star.dataset.value <= hoverValue ? '#f59e0b' : '#d1d5db';
+            });
+        }
+
+        function setRating(e) {
+            const selectedValue = e.target.dataset.value;
+            const stars = document.querySelectorAll('.star');
+            
+            stars.forEach(star => {
+                star.style.color = star.dataset.value <= selectedValue ? '#f59e0b' : '#d1d5db';
+                star.removeEventListener('mouseover', hoverStar);
+            });
+            
+            ratingText.textContent = ratingTexts[selectedValue - 1];
+            document.querySelectorAll('.star').forEach(s => {
+                s.removeEventListener('mouseover', hoverStar);
+            });
+        }
+
+        // Счетчик символов
+        const comment = document.getElementById('comment');
+        const charCount = document.getElementById('charCount');
+        
+        comment.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+
+        // Отправка формы
+        const feedbackForm = document.getElementById('feedbackForm');
+        const thankYouMessage = document.getElementById('thankYouMessage');
+        
+        feedbackForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            feedbackForm.classList.add('hidden');
+            thankYouMessage.classList.remove('hidden');
+            
+            // Здесь была бы отправка данных на сервер
+            setTimeout(() => {
+                // window.location.href = '/';
+            }, 3000);
+        });
+    </script>
+
+    <style>
+        .star {
+            transition: color 0.2s ease;
+        }
+        textarea {
+            resize: none;
+        }
+    </style>
+</body>
+</html>

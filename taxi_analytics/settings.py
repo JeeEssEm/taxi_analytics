@@ -28,6 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'users.apps.UsersConfig',
+    'orders.apps.OrdersConfig',
+    'drivers.apps.DriversConfig',
+    'cars.apps.CarsConfig',
+    'reviews.apps.ReviewsConfig',
 ]
 
 MIDDLEWARE = [
