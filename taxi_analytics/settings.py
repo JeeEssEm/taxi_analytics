@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'drivers.apps.DriversConfig',
     'cars.apps.CarsConfig',
     'reviews.apps.ReviewsConfig',
+    'django.contrib.gis',
 ]
 
 MIDDLEWARE = [
@@ -67,13 +68,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'taxi_analytics.wsgi.application'
 
+GDAL_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgdal.so'
+GEOS_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgeos_c.so'
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': os.environ.get('DB_NAME', default='myproject'),
+        'USER': os.environ.get('DB_USER', default='postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', default='postgres'),
+        'HOST': os.environ.get('DB_HOST', default='db'),
+        'PORT': os.environ.get('DB_PORT', default='5432'),
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
