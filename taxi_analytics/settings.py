@@ -8,6 +8,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'NOT SECRET KEY')
+DEFAULT_USER_ACTIVITY = os.environ.get('DEFAULT_USER_ACTIVITY', True)
 
 DEBUG = os.environ.get('DEBUG', 'true').lower() in {
     'y',
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
     'orders.apps.OrdersConfig',
     'drivers.apps.DriversConfig',
     'cars.apps.CarsConfig',
+    'home.apps.HomeConfig',
     'reviews.apps.ReviewsConfig',
     'django.contrib.gis',
 ]
@@ -96,6 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 AUTH_USER_MODEL = 'users.TaxiUser'
 
