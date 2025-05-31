@@ -9,11 +9,14 @@
         {% with request.resolver_match.view_name as view_name %}
             {% if view_name == 'users:login' %}
                 <div class="flex items-center justify-between mt-4">
-                    <a href="#" class="text-sm text-blue-500 hover:underline">Забыли пароль?</a>
-                    <p class="text-sm text-gray-600">Нет аккаунта? <a href="{% url 'users:signup' %}" class="text-blue-500 hover:underline">Зарегистрироваться</a></p>
+                    <a href="{% url 'users:password_reset' %}" class="text-sm text-blue-500 hover:underline">Забыли пароль?</a>
+                    <div class="flex justify-center flex-col">
+                        <p class="text-sm text-gray-600">Нет аккаунта?</p>
+                        <a href="{% url 'users:signup' %}" class="text-blue-500 hover:underline">Зарегистрироваться</a>
+                    </div>
                 </div>
             {% elif view_name == 'users:signup' %}
-                <div class="flex items-center justify-center mt-4">
+                <div class="flex items-center justify-center mt-4 flex-col justify-center">
                     <p class="text-sm text-gray-600">Уже есть аккаунт? <a href="{% url 'users:login' %}" class="text-blue-500 hover:underline">Войти</a></p>
                 </div>
             {% endif %}
