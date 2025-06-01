@@ -33,6 +33,7 @@ services:
     environment:
       - DEBUG=1
       - DATABASE_URL=postgis://postgres:postgres@db:5432/myproject
+      - DEFAULT_USER_ACTIVITY=0
 
 volumes:
   postgres_data:

@@ -8,7 +8,13 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'NOT SECRET KEY')
-DEFAULT_USER_ACTIVITY = os.environ.get('DEFAULT_USER_ACTIVITY', True)
+DEFAULT_USER_ACTIVITY = os.environ.get('DEFAULT_USER_ACTIVITY', 'true').lower() in {
+    'y',
+    'yes',
+    'true',
+    '1',
+    't',
+}
 
 DEBUG = os.environ.get('DEBUG', 'true').lower() in {
     'y',
@@ -17,6 +23,9 @@ DEBUG = os.environ.get('DEBUG', 'true').lower() in {
     '1',
     't',
 }
+
+JWT_EXPIRATION_DELTA_DAYS = os.environ.get('JWT_EXPIRATION_DELTA_DAYS', 3)
+JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
@@ -46,6 +55,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    "users.auth_backend.EmailLoginAuth",
 ]
 
 INTERNAL_IPS = os.environ.get('INTERNAL_IPS', '*').split(',')
@@ -104,7 +117,7 @@ LOGOUT_REDIRECT_URL = '/'
 
 AUTH_USER_MODEL = 'users.TaxiUser'
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -124,4 +137,20 @@ if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
 else:
-    ... # TODO: implement
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.yandex.ru')
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 465))
+    EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", 'true').lower() in {
+        'y',
+        'yes',
+        'true',
+        '1',
+        't',
+    }
+
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '<EMAIL>')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '<password>')
+
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    SERVER_EMAIL = EMAIL_HOST_USER
+    EMAIL_ADMIN = EMAIL_HOST_USER
