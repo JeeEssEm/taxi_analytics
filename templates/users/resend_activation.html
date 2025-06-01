@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Активация
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-screen">
+    <div class="w-full max-w-md">
+        {% with form_icon='<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>' %}
+            {% include "users/includes/form.html" with form_name="Повторная активация" button_text="Отправить письмо" form_icon=form_icon %}
+        {% endwith %}
+
+        {% if messages %}
+            <div class="mt-6">
+                {% for message in messages %}
+                    <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-yellow-50 text-yellow-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

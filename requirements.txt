@@ -7,3 +7,4 @@ psycopg2-binary
 django-environ
 GDAL==3.6.2
 Pillow
+PyJWT==2.10.1

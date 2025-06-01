@@ -11,10 +11,9 @@ class EmailLoginAuth(ModelBackend):
 
         try:
             user = TaxiUser.objects.get(**kwargs)
-            if user.check_password(password):
+            if user.check_password(password) and user.is_active:
                 return user
-            else:
-                return None
+            return None
 
         except TaxiUser.DoesNotExist:
             return None
