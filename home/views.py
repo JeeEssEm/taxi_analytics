@@ -4,4 +4,4 @@ from django.http import HttpResponse
 
 
 class IndexView(TemplateView):
-    template_name = 'home/index.html'
+    template_name = "home/index.html"

@@ -11,12 +11,11 @@ class ClientActiveOrderView(View):
     @method_decorator(login_required)
     def get(self, request: HttpRequest):
         try:
-            order = TaxiOrder.objects.get(user_id=request.user.id,
-                                          status='ON_THE_WAY')
+            order = TaxiOrder.objects.get(user_id=request.user.id, status="ON_THE_WAY")
         except TaxiOrder.DoesNotExist:
-            raise Http404('No active orders')
-        context = {'order': order}
-        return render(request, 'orders/active_order_client.html', context)
+            raise Http404("No active orders")
+        context = {"order": order}
+        return render(request, "orders/active_order_client.html", context)
 
 
 class DriverActiveOrderView(View):
@@ -25,20 +24,19 @@ class DriverActiveOrderView(View):
         try:
             driver = TaxiDriver.objects.get(user_id=request.user.id)
         except TaxiDriver.DoesNotExist:
-            raise Http404('Driver does not exist')
+            raise Http404("Driver does not exist")
         try:
-            order = TaxiOrder.objects.get(driver_id=driver.id, 
-                                          status='ON_THE_WAY')
+            order = TaxiOrder.objects.get(driver_id=driver.id, status="ON_THE_WAY")
         except TaxiOrder.DoesNotExist:
-            raise Http404('Order does not exist')
-        context = {'order': order}
-        return render(request, 'orders/active_order_driver.html', context)
+            raise Http404("Order does not exist")
+        context = {"order": order}
+        return render(request, "orders/active_order_driver.html", context)
 
 
 class ClientNewOrderView(View):
     @method_decorator(login_required)
     def get(self, request: HttpRequest):
-        return render(request, 'orders/new_order_client.html')
+        return render(request, "orders/new_order_client.html")
 
 
 class DriverNewOrderView(View):
@@ -47,5 +45,5 @@ class DriverNewOrderView(View):
         try:
             TaxiDriver.objects.get(user_id=request.user.id)
         except TaxiDriver.DoesNotExist:
-            raise Http404('Driver does not exist')
-        return render(request, 'orders/new_order_driver.html')
+            raise Http404("Driver does not exist")
+        return render(request, "orders/new_order_driver.html")
