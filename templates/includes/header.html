@@ -76,44 +76,13 @@
           Аккаунт
         </a>
       {% else %}
-        <a href="{% url 'users:login' %}" class="mobile-nav-link">
+        <a href="{% url 'users:login' %}" class="mobile-nav-link px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
           Войти
         </a>
-        <a href="{% url 'users:signup' %}" class="mobile-nav-link">
+        <a href="{% url 'users:signup' %}" class="mobile-nav-link px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors">
           Регистрация
         </a>
       {% endif %}
     </div>
   </div>
 </header>
-
-<style>
-  .nav-pill {
-    @apply flex items-center px-4 py-2 text-sm font-medium text-gray-700 rounded-full transition-all duration-300;
-  }
-
-  .mobile-nav-link {
-    @apply flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50;
-  }
-</style>
-
-<script>
-    // вынести это в скрипт, а потом импортировать
-  document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuButton = document.querySelector('.mobile-menu-button');
-    const mobileMenu = document.querySelector('.mobile-menu');
-
-    mobileMenuButton.addEventListener('click', function() {
-      mobileMenu.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', function(event) {
-      const isClickInsideMenu = mobileMenu.contains(event.target);
-      const isClickOnButton = mobileMenuButton.contains(event.target);
-
-      if (!isClickInsideMenu && !isClickOnButton && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-      }
-    });
-  });
-</script>
