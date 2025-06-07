@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование профиля{% endblock %}
+
+{% block not_centered_content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <!-- Заголовок -->
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-8 py-6">
+      <h1 class="text-2xl font-bold text-white">Редактирование профиля</h1>
+    </div>
+    
+    <!-- Форма редактирования -->
+    <div class="p-8">
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Аватар -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Аватар</label>
+          <div class="flex items-center">
+            <div class="relative mr-6">
+              <img 
+                id="avatar-preview"
+                src="{{ user.profile.avatar.url|default:'https://via.placeholder.com/150' }}" 
+                alt="Текущий аватар" 
+                class="w-24 h-24 rounded-full object-cover border-2 border-gray-200">
+              <label for="id_avatar" class="absolute bottom-0 right-0 bg-white rounded-full p-1 border border-gray-300 cursor-pointer shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </label>
+              {{ form.avatar }}
+            </div>
+            <p class="text-sm text-gray-500">Рекомендуемый размер: 200×200 пикселей</p>
+          </div>
+        </div>
+        
+        <!-- Личная информация -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label for="{{ form.last_name.auto_id }}" class="block text-gray-700 font-medium mb-2">Фамилия</label>
+            <input name="{{ form.last_name.html_name }}"
+                   maxlength="{{ form.last_name.max_length }}"
+                   id="{{ form.last_name.id_for_label }}"
+                   class="mt-1 block p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                   type="{{ form.last_name.field.widget.input_type }}"
+                   value="{{ form.last_name.value|default_if_none:'' }}"/>
+          </div>
+          
+          <div>
+            <label for="{{ form.first_name.auto_id }}" class="block text-gray-700 font-medium mb-2">Имя</label>
+            <input name="{{ form.first_name.html_name }}"
+                   maxlength="{{ form.first_name.max_length }}"
+                   id="{{ form.first_name.id_for_label }}"
+                   class="mt-1 block p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                   type="{{ form.first_name.field.widget.input_type }}"
+                   value="{{ form.first_name.value|default_if_none:'' }}"/>
+          </div>
+          
+          <div>
+            <label for="{{ form.middle_name.auto_id }}" class="block text-gray-700 font-medium mb-2">Отчество</label>
+            <input name="{{ form.middle_name.html_name }}"
+                   maxlength="{{ form.middle_name.max_length }}"
+                   id="{{ form.middle_name.id_for_label }}"
+                   class="mt-1 block p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                   type="{{ form.middle_name.field.widget.input_type }}"
+                   value="{{ form.middle_name.value|default_if_none:'' }}"/>
+          </div>
+        </div>
+        
+        <!-- Контактная информация -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="{{ form.email.auto_id }}" class="block text-gray-700 font-medium mb-2">Email</label>
+            <input name="{{ form.email.html_name }}"
+                   maxlength="{{ form.email.max_length }}"
+                   id="{{ form.email.id_for_label }}"
+                   class="mt-1 block p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                   type="{{ form.email.field.widget.input_type }}"
+                   value="{{ form.email.value|default_if_none:'' }}"/>
+          </div>
+          
+          <div>
+            <label for="{{ form.phone.auto_id }}" class="block text-gray-700 font-medium mb-2">Телефон</label>
+            <input name="{{ form.phone.html_name }}"
+                   maxlength="{{ form.phone.max_length }}"
+                   id="{{ form.phone.id_for_label }}"
+                   class="mt-1 block p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                   type="{{ form.phone.field.widget.input_type }}"
+                   value="{{ form.phone.value|default_if_none:'' }}"/>
+          </div>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="flex justify-end space-x-4 pt-6">
+          <a href="{% url 'users:profile' pk=request.user.id %}" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">
+            Отмена
+          </a>
+          <button type="submit" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition shadow-sm">
+            Сохранить изменения
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Обновление превью аватара
+  document.getElementById('id_avatar').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('avatar-preview').src = e.target.result;
+      }
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  });
+</script>
+{% endblock %}

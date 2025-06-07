@@ -4,7 +4,7 @@ from django.contrib.auth.forms import (
     ValidationError,
     authenticate,
 )
-from django.forms import Form, EmailField, BooleanField
+from django.forms import Form, EmailField, ModelForm
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -73,3 +73,15 @@ class LoginForm(AuthenticationForm):
                 self.confirm_login_allowed(self.user_cache)
 
         return self.cleaned_data
+
+
+class ProfileForm(ModelForm):
+    class Meta:
+        model = models.TaxiUser
+        fields = (
+            models.TaxiUser.email.field.name,
+            models.TaxiUser.username.field.name,
+            models.TaxiUser.first_name.field.name,
+            models.TaxiUser.middle_name.field.name,
+            models.TaxiUser.last_name.field.name,
+        )

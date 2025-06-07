@@ -17,19 +17,21 @@
             <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
           </div>
 
+          {% if current_user.id == request.user.id %}
           <div class="ml-4 mb-2">
             <a
-                    href="#"
-                    class="px-4 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg font-medium hover:bg-purple-50 transition flex items-center shadow-sm"
+              href="{% url 'users:edit_profile' pk=request.user.id %}"
+              class="px-4 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg font-medium hover:bg-purple-50 transition flex items-center shadow-sm hover:bg-purple-600 hover:text-white hover:border-purple-600"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
                    stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
               </svg>
               Редактировать
             </a>
           </div>
+          {% endif %}
         </div>
       </div>
 
@@ -37,11 +39,12 @@
       <div class="pt-20 px-8 pb-8">
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-gray-800">
-            {{ user.last_name }} {{ user.first_name }} {{ user.profile.middle_name|default:'' }}
+            {{ current_user.last_name }} {{ current_user.first_name }} {{ current_user.profile.middle_name|default:'' }}
           </h1>
-          <p class="text-gray-500 mt-1">Участник с {{ user.date_joined|date:"d.m.Y" }}</p>
+          <p class="text-gray-500 mt-1">Участник с {{ current_user.date_joined|date:"d.m.Y" }}</p>
         </div>
 
+        {% if request.user.id == pk %}
         <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
           <div>
             <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
@@ -49,7 +52,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none"
                      viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 Контактная информация
               </h2>
@@ -68,6 +71,7 @@
                 </div>
               </div>
             </div>
+          {% endif %}
 
             <div>
               <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
@@ -75,7 +79,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600"
                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                   </svg>
                   Статистика поездок
                 </h2>

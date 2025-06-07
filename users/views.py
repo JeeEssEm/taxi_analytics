@@ -2,7 +2,7 @@ from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.views.generic import FormView, View
+from django.views.generic import FormView, View, UpdateView
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -12,7 +12,7 @@ import users.models as users_models
 import orders.models as order_models
 import reviews.models as review_models
 from users.utils import send_activation_email, decode_jwt_token
-from users.forms import SignUpForm, ResendActivationEmailForm, LoginForm
+from users.forms import SignUpForm, ResendActivationEmailForm, LoginForm, ProfileForm
 
 
 class SignUpView(FormView):
@@ -89,9 +89,25 @@ class ProfileView(LoginRequiredMixin, View):
     template_name = "users/profile.html"
 
     def get(self, request, *args, **kwargs):
-        trip_summary = order_models.TaxiOrder.objects.get_profile_summary(self.request.user.id)
-        rating = review_models.TaxiReview.objects.get_user_rating(self.request.user.id)
+        pk = self.kwargs.get("pk")
+        trip_summary = order_models.TaxiOrder.objects.get_profile_summary(pk)
+        rating = review_models.TaxiReview.objects.get_user_rating(pk)
+        user = users_models.TaxiUser.objects.get(pk=pk)
         return render(request, self.template_name, {
+            "current_user": user,
             "trip_summary": trip_summary,
             "rating": rating,
+            "pk": pk
         })
+
+
+class EditProfileView(LoginRequiredMixin, UpdateView):
+    template_name = "users/edit_profile.html"
+    form_class = ProfileForm
+    model = users_models.TaxiUser
+
+    def dispatch(self, request, *args, **kwargs):
+        pk = self.kwargs.get("pk")
+        if pk != request.user.id:
+            return redirect("users:profile")
+        return super(EditProfileView, self).dispatch(request, *args, **kwargs)
