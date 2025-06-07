@@ -1,16 +1,18 @@
 from django.db import models
 from django.contrib.gis.db import models
+
 from drivers.models import TaxiDriver
 from cars.models import TaxiCar
+from orders.managers import OrderManager
 from users.models import TaxiUser
-from reviews.models import TaxiReview
 
 
 class TaxiOrder(models.Model):
+    objects = OrderManager()
+
     driver = models.ForeignKey(TaxiDriver, null=False, on_delete=models.CASCADE)
     car = models.ForeignKey(TaxiCar, null=False, on_delete=models.CASCADE)
     client = models.ForeignKey(TaxiUser, null=False, on_delete=models.CASCADE)
-    review = models.ForeignKey(TaxiReview, on_delete=models.CASCADE)
 
     STATUSES = {"CANCELLED": "Cancelled", "ON_THE_WAY": "On the way", "DONE": "done"}
     status = models.CharField(choices=STATUSES)
