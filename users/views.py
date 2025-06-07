@@ -4,18 +4,20 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import FormView, View
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 import jwt
 
-from users import models
-from users.forms import SignUpForm, ResendActivationEmailForm, LoginForm
-from users.models import TaxiUser
+import users.models as users_models
+import orders.models as order_models
+import reviews.models as review_models
 from users.utils import send_activation_email, decode_jwt_token
+from users.forms import SignUpForm, ResendActivationEmailForm, LoginForm
 
 
 class SignUpView(FormView):
     template_name = "users/signup.html"
-    model = models.TaxiUser
+    model = users_models.TaxiUser
     success_url = reverse_lazy("users:activate_after_signup")
     form_class = SignUpForm
 
@@ -43,12 +45,12 @@ class ResendActivationEmailView(FormView):
     def form_valid(self, form):
         email = form.cleaned_data["email"]
         try:
-            user = models.TaxiUser.objects.get(email=email)
+            user = users_models.TaxiUser.objects.get(email=email)
             if user.is_active:
                 form.add_error("email", "Аккаунт уже активирован")
                 return super().form_invalid(form)
 
-        except TaxiUser.DoesNotExist:
+        except users_models.TaxiUser.DoesNotExist:
             form.add_error("email", False)
             return super().form_invalid(form)
         send_activation_email(user.id, form.cleaned_data.get("email"), self.request)
@@ -63,7 +65,7 @@ class ActivateUserView(View):
         token = request.GET.get("token")
         try:
             user_id = decode_jwt_token(token).get("user_id")
-            user = get_object_or_404(TaxiUser, id=user_id)
+            user = get_object_or_404(users_models.TaxiUser, id=user_id)
             if user.is_active:
                 return render(request, "users/failed_activation.html")
             user.is_active = True
@@ -81,3 +83,15 @@ class ActivateAfterSignUpView(View):
             return redirect(reverse_lazy("users:login"))
         email = request.session.get("email", "вашу почту")
         return render(request, self.template_name, {"email": email})
+
+
+class ProfileView(LoginRequiredMixin, View):
+    template_name = "users/profile.html"
+
+    def get(self, request, *args, **kwargs):
+        trip_summary = order_models.TaxiOrder.objects.get_profile_summary(self.request.user.id)
+        rating = review_models.TaxiReview.objects.get_user_rating(self.request.user.id)
+        return render(request, self.template_name, {
+            "trip_summary": trip_summary,
+            "rating": rating,
+        })

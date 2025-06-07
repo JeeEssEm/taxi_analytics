@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block not_centered_content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="relative">
+        <div class="h-40 bg-gradient-to-r from-purple-600 to-indigo-700"></div>
+
+        <div class="absolute -bottom-16 left-8 flex items-end">
+          <div class="relative">
+            <img
+                    src="{{ user.profile.avatar.url|default:'https://via.placeholder.com/150' }}"
+                    alt="Аватар пользователя"
+                    class="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg">
+            <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+          </div>
+
+          <div class="ml-4 mb-2">
+            <a
+                    href="#"
+                    class="px-4 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg font-medium hover:bg-purple-50 transition flex items-center shadow-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+                   stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Редактировать
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Основная информация -->
+      <div class="pt-20 px-8 pb-8">
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-800">
+            {{ user.last_name }} {{ user.first_name }} {{ user.profile.middle_name|default:'' }}
+          </h1>
+          <p class="text-gray-500 mt-1">Участник с {{ user.date_joined|date:"d.m.Y" }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div>
+            <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+              <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Контактная информация
+              </h2>
+
+              <div class="space-y-4">
+                <div>
+                  <p class="text-sm text-gray-500">Email</p>
+                  <p class="font-medium text-gray-800">{{ user.email }}</p>
+                </div>
+
+                <div>
+                  <p class="text-sm text-gray-500">Телефон</p>
+                  <p class="font-medium text-gray-800">
+                    {{ user.profile.phone|default:'Не указан' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600"
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                  Статистика поездок
+                </h2>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-white rounded-lg p-4 text-center shadow">
+                    <p class="text-3xl font-bold text-purple-600">{{ trip_summary.total_count }}</p>
+                    <p class="text-sm text-gray-500">Всего поездок</p>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 text-center shadow">
+                    <p class="text-3xl font-bold text-purple-600">{{ trip_summary.total_distance }}</p>
+                    <p class="text-sm text-gray-500">Пройдено км</p>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 text-center shadow">
+                    <p class="text-3xl font-bold text-purple-600">{{ rating }}</p>
+                    <p class="text-sm text-gray-500">Ваш рейтинг</p>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 text-center shadow">
+                    <p class="text-3xl font-bold text-purple-600">{{ trip_summary.total_duration }}</p>
+                    <p class="text-sm text-gray-500">Времени в пути (часов)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
