@@ -1,21 +1,26 @@
 {% extends 'base.html' %}
 
+{% load sorl_thumbnail %}
+
 {% block title %}Профиль пользователя{% endblock %}
 
 {% block not_centered_content %}
   <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-      <div class="relative">
-        <div class="h-40 bg-gradient-to-r from-purple-600 to-indigo-700"></div>
-
-        <div class="absolute -bottom-16 left-8 flex items-end">
-          <div class="relative">
+      <div class="p-5">
+        <div class="left-8 flex items-start flex-col md:flex-row md:items-end">
+          {% thumbnail user.image "128x128" crop="center" as img %}
             <img
-                    src="{{ user.profile.avatar.url|default:'https://via.placeholder.com/150' }}"
-                    alt="Аватар пользователя"
-                    class="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg">
-            <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
+              id="avatar-preview"
+              src="{{ img.url }}"
+              alt="Текущий аватар"
+              class="w-24 h-24 rounded-full object-cover border-2 border-gray-200">
+          {% empty %}
+            <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" fill="currentColor" class="bi bi-person-circle text-secondary" viewBox="0 0 16 16">
+              <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path>
+              <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"></path>
+            </svg>
+          {% endthumbnail %}
 
           {% if current_user.id == request.user.id %}
           <div class="ml-4 mb-2">
@@ -39,7 +44,7 @@
       <div class="pt-20 px-8 pb-8">
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-gray-800">
-            {{ current_user.last_name }} {{ current_user.first_name }} {{ current_user.profile.middle_name|default:'' }}
+            {{ current_user.last_name }} {{ current_user.first_name }} {{ current_user.middle_name|default:'' }}
           </h1>
           <p class="text-gray-500 mt-1">Участник с {{ current_user.date_joined|date:"d.m.Y" }}</p>
         </div>

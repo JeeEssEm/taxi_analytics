@@ -11,15 +11,15 @@ import jwt
 import users.models as users_models
 import orders.models as order_models
 import reviews.models as review_models
+import users.forms as user_forms
 from users.utils import send_activation_email, decode_jwt_token
-from users.forms import SignUpForm, ResendActivationEmailForm, LoginForm, ProfileForm
 
 
 class SignUpView(FormView):
     template_name = "users/signup.html"
     model = users_models.TaxiUser
     success_url = reverse_lazy("users:activate_after_signup")
-    form_class = SignUpForm
+    form_class = user_forms.SignUpForm
 
     def form_valid(self, form):
         user = form.save()
@@ -34,11 +34,11 @@ class SignUpView(FormView):
 
 
 class ModifiedLoginView(LoginView):
-    authentication_form = LoginForm
+    authentication_form = user_forms.LoginForm
 
 
 class ResendActivationEmailView(FormView):
-    form_class = ResendActivationEmailForm
+    form_class = user_forms.ResendActivationEmailForm
     template_name = "users/resend_activation.html"
     success_url = reverse_lazy("users:resend_activation_email")
 
@@ -103,8 +103,14 @@ class ProfileView(LoginRequiredMixin, View):
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
     template_name = "users/edit_profile.html"
-    form_class = ProfileForm
+    form_class = user_forms.ProfileForm
     model = users_models.TaxiUser
+
+    def get_success_url(self):
+        return reverse_lazy("users:edit_profile", kwargs={"pk": self.request.user.id})
+
+    def get_object(self, queryset=None):
+        return self.request.user
 
     def dispatch(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")

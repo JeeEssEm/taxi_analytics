@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "home.apps.HomeConfig",
     "reviews.apps.ReviewsConfig",
     "django.contrib.gis",
+    "sorl.thumbnail"
 ]
 
 MIDDLEWARE = [
@@ -130,6 +131,9 @@ STATICFILES_DIRS = [
     BASE_DIR / "static_dev",
 ]
 STATIC_ROOT = BASE_DIR / "static"
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

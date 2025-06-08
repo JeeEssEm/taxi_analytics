@@ -80,8 +80,8 @@ class ProfileForm(ModelForm):
         model = models.TaxiUser
         fields = (
             models.TaxiUser.email.field.name,
-            models.TaxiUser.username.field.name,
             models.TaxiUser.first_name.field.name,
             models.TaxiUser.middle_name.field.name,
             models.TaxiUser.last_name.field.name,
+            models.TaxiUser.image.field.name,
         )
