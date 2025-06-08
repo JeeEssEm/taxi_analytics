@@ -1,7 +1,32 @@
+import os
+import uuid
+
 from django.db import models
 from users.models import TaxiUser
 from cars.models import TaxiCar
 
 
+def upload_licenses(instance, filename):
+    return TaxiDriver.get_file_path(instance, filename, "driver_licenses")
+
+
+def upload_rc(instance, filename):
+    return TaxiDriver.get_file_path(instance, filename, "registration_certificates")
+
+
 class TaxiDriver(models.Model):
-    car = models.ForeignKey(TaxiCar, null=False, on_delete=models.CASCADE)
+    car = models.OneToOneField(TaxiCar, null=False, on_delete=models.CASCADE)
+    driver_license = models.FileField(
+        upload_to=upload_licenses,
+        null=False
+    )
+    registration_certificate = models.FileField(
+        upload_to=upload_rc,
+        null=False
+    )
+
+    @staticmethod
+    def get_file_path(inst, filename, path):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % (uuid.uuid4(), ext)
+        return os.path.join(f'{path}/', filename)

@@ -7,6 +7,7 @@ import users.urls
 import orders.urls
 import reviews.urls
 import home.urls
+import drivers.urls
 from taxi_analytics import settings
 
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
     path("users/", include(users.urls)),
     path("orders/", include(orders.urls)),
     path("reviews/", include(reviews.urls)),
+    path("drivers/", include(drivers.urls)),
 ]
 
 if settings.DEBUG:
