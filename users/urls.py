@@ -19,7 +19,8 @@ urlpatterns = [
     path(
         "logout/",
         auth_views.LogoutView.as_view(
-            template_name="home/index.html",
+            template_name="users/logout.html",
+            next_page=reverse_lazy("home:index"),
         ),
         name="logout",
     ),
