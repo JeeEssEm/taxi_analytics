@@ -84,4 +84,5 @@ class ProfileForm(ModelForm):
             models.TaxiUser.middle_name.field.name,
             models.TaxiUser.last_name.field.name,
             models.TaxiUser.image.field.name,
+            models.TaxiUser.phone.field.name
         )
