@@ -30,7 +30,7 @@ class BecomeDriverView(LoginRequiredMixin, CreateView):
 
     def get(self, request, *args, **kwargs):
         if request.user.taxi:
-            return redirect(reverse_lazy())
+            return redirect(reverse_lazy('orders:list'))
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
