@@ -16,6 +16,25 @@ services:
       timeout: 5s
       retries: 5
 
+  analytics_db:
+    build:
+      context: .
+      dockerfile: Dockerfile.analytics
+    environment:
+      POSTGRES_DB: taxi_analytics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost 
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_analytics_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     command: >
@@ -38,3 +57,4 @@ services:
 volumes:
   postgres_data:
   static_volume:
+  postgres_analytics_data:

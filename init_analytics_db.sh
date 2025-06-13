@@ -1,22 +1,21 @@
 #!/bin/bash
-
 dataset=nyc-yellow-taxi-trip-data
 dataset_dir=$dataset
 table=nyc_yellow_taxi_trip
 
 echo "Downloading dataset $dataset..."
 
-curl -L --skip-existing -o "$dataset.zip" \
+curl -L -o "$dataset.zip" \
   https://www.kaggle.com/api/v1/datasets/download/elemento/nyc-yellow-taxi-trip-data
 
 echo "Extracting dataset to $dataset_dir"
-unzip -n $dataset.zip -d $dataset_dir
+unzip  $dataset.zip -d $dataset_dir
 
-echo "Enter database name: "
-read database
+database=$POSTGRES_DB
+psql -U $POSTGRES_USER -c "CREATE DATABASE database"
 
-sudo -u postgres psql -d $database -c "CREATE EXTENSION IF NOT EXISTS postgis"
-sudo -u postgres psql -d $database -c \
+psql -U $POSTGRES_USER -d $database -c "CREATE EXTENSION IF NOT EXISTS postgis"
+psql -U $POSTGRES_USER -d $database -c \
 "CREATE TABLE IF NOT EXISTS $table (
     vendor_id TEXT,
     tpep_pickup_datetime TIMESTAMP,
@@ -43,7 +42,7 @@ sudo -u postgres psql -d $database -c \
 
 filelist=$(ls $dataset_dir)
 for filename in ${filelist[@]}; do
-    sudo -u postgres psql -d $database -c \
+    psql -U $POSTGRES_USER -d $database -c \
         "\copy $table (
         vendor_id,
         tpep_pickup_datetime,
@@ -69,12 +68,12 @@ for filename in ${filelist[@]}; do
     WITH (FORMAT CSV, HEADER true, NULL '')"
 done
 
-sudo -u postgres psql -d $database -c \
+psql -U $POSTGRES_USER -d $database -c \
 "UPDATE $table
 SET pickup_location = ST_SetSRID(ST_MakePoint(pickup_longitude, pickup_latitude), 4326)
 WHERE pickup_longitude IS NOT NULL AND pickup_latitude IS NOT NULL"
 
-sudo -u postgres psql -d $database -c \
+psql -U $POSTGRES_USER -d $database -c \
 "UPDATE $table
 SET pickup_location = ST_SetSRID(ST_MakePoint(pickup_longitude, pickup_latitude), 4326)
 WHERE pickup_longitude IS NOT NULL AND pickup_latitude IS NOT NULL"
