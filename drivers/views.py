@@ -1,4 +1,5 @@
 from django.contrib.auth.views import LoginView
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -11,6 +12,7 @@ import users.models as users_models
 import orders.models as order_models
 import reviews.models as review_models
 import users.forms as user_forms
+import drivers.models as drivers_models
 import cars.models as cars_models
 
 
@@ -46,3 +48,16 @@ class BecomeDriverView(LoginRequiredMixin, CreateView):
             self.request.user.save()
             return super().form_valid(form)
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class ChangeDriverActivityView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        if request.user.taxi.status == drivers_models.TaxiDriver.StatusChoices.INACTIVE:
+            request.user.taxi.status = drivers_models.TaxiDriver.StatusChoices.WAITING
+            request.user.taxi.save()
+            return redirect(reverse_lazy('orders:list'))
+        if request.user.taxi.status == drivers_models.TaxiDriver.StatusChoices.WORKING:
+           return HttpResponse(status=403, message='You cannot change activity while working')
+        request.user.taxi.status = drivers_models.TaxiDriver.StatusChoices.INACTIVE
+        request.user.taxi.save()
+        return redirect(reverse_lazy('orders:list'))
