@@ -115,5 +115,5 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
     def dispatch(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
         if pk != request.user.id:
-            return redirect("users:profile")
+            return redirect(reverse_lazy("users:profile", kwargs={"pk": pk}))
         return super(EditProfileView, self).dispatch(request, *args, **kwargs)

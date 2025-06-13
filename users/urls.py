@@ -73,7 +73,7 @@ urlpatterns = [
         name="profile"
     ),
     path(
-        "edit_profile/<int:pk>/edit/",
+        "profile/<int:pk>/edit/",
         views.EditProfileView.as_view(),
         name="edit_profile"
     )

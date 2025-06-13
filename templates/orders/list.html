@@ -7,7 +7,7 @@
     <div class="car-info bg-white rounded-xl shadow-md p-6 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold text-gray-800">Информация о машине</h2>
-        <a href="#"
+        <a href="{% url 'drivers:edit_driver' %}"
            class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
                stroke="currentColor">
@@ -156,14 +156,6 @@
         <p class="text-gray-500 max-w-md mx-auto mb-6">
           Для просмотра доступных заказов перейдите в режим работы.
         </p>
-        <a href="#"
-           class="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition inline-flex items-center">
-          <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-               stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-          Выйти на линию
-        </a>
       </div>
     {% else %}
       <div id="orders-container" class="space-y-4">

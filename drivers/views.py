@@ -61,3 +61,37 @@ class ChangeDriverActivityView(LoginRequiredMixin, View):
         request.user.taxi.status = drivers_models.TaxiDriver.StatusChoices.INACTIVE
         request.user.taxi.save()
         return redirect(reverse_lazy('orders:list'))
+
+
+class UpdateDriverInformationView(LoginRequiredMixin, UpdateView):
+    model = drivers_models.TaxiDriver
+    form_class = driver_forms.DriverForm
+    template_name = 'drivers/edit_information.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['car_form'] = driver_forms.CarForm(self.request.POST)
+        else:
+            context['car_form'] = driver_forms.CarForm(instance=self.object.car)
+        return context
+
+    def get_object(self, queryset=None):
+        return self.request.user.taxi
+
+    def get_success_url(self):
+        return reverse_lazy('orders:list')
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        car_form = context['car_form']
+        if car_form.is_valid():
+            car = car_form.save()
+            self.object = form.save(commit=False)
+            self.object.car = car
+            self.object = form.save()
+
+            self.request.user.taxi = self.object
+            self.request.user.save()
+            return super().form_valid(form)
+        return self.render_to_response(self.get_context_data(form=form))
