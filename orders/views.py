@@ -7,8 +7,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.list import ListView, View
 from django.urls import reverse_lazy
 
+from orders.serializers import OrderSerializer
+from orders.models import TaxiOrder, TaxiDriver, TaxiUser
 from reviews.models import TaxiReview
-from .models import TaxiOrder, TaxiDriver, TaxiUser
 
 
 class OrdersListView(LoginRequiredMixin, View): # TODO: ListView
@@ -28,25 +29,12 @@ class OrdersListView(LoginRequiredMixin, View): # TODO: ListView
         # если ajax, то возвращаем json
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             orders: list[TaxiOrder] = self.get_queryset()
-            orders_data = [{
-                'id': order.id,
-                'start_address': str(order.pickup_coords), # TODO: geocoder api
-                'end_address': str(order.dropoff_coords),
-                'price': 1337,  # TODO: сделать расчет
-                'distance': 4, # TODO: придумать, как рассчитать. Например, api
-                'created_at': order.created_at.strftime("%H:%M"),
-                'passenger': {
-                    'name': order.client.get_full_name(),
-                    'rating': TaxiReview.objects.get_user_rating(order.client.id)
-                }
-            } for order in orders]
-            print(orders_data)
             return JsonResponse({
-                'orders': orders_data,
+                'orders': OrderSerializer.get_orders(request, orders),
                 'refresh_interval': self.refresh_interval,
             })
         return render(request, self.template_name, {
-            'refresh_interval': self.refresh_interval,
+            'refresh_interval': self.refresh_interval // 1000,
         })
 
 

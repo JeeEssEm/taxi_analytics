@@ -26,12 +26,15 @@ class TaxiOrder(models.Model):
 
     pickup_datetime = models.DateTimeField(null=True, blank=True)
     pickup_coords = models.GeometryField(geography=True)
+    pickup_verbose = models.CharField()
 
     dropoff_datetime = models.DateTimeField(null=True, blank=True)
     dropoff_coords = models.GeometryField(geography=True)
+    dropoff_verbose = models.CharField()
 
     passenger_count = models.SmallIntegerField()
     trip_distance_km = models.IntegerField()
+    expected_duration = models.FloatField()
 
     PAYMENTS = ((0, "CARD"), (1, "CASH"))
     payment_type = models.SmallIntegerField(choices=PAYMENTS)
