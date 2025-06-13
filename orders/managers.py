@@ -23,3 +23,10 @@ class OrderManager(Manager):
             'total_distance': result['total_distance'] or 0.0,
             'total_duration': (result['total_duration'] or timedelta()).total_seconds() / 60 / 60
         }
+
+    def get_amount_of_pending_orders(self) -> int:
+        return self.filter(
+            status="PENDING"
+        ).aggregate(
+            total_count=Count('id')
+        )['total_count'] or 0
