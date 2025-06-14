@@ -18,7 +18,7 @@
                 <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">Быстрое и безопасное такси</h1>
                 <p class="text-xl md:text-2xl mb-10 max-w-3xl mx-auto opacity-90">Закажите такси за 2 минуты и получите комфортную поездку по лучшей цене в городе</p>
                 <div class="flex flex-col md:flex-row justify-center gap-4">
-                    <a href="#" class="px-8 py-4 bg-white text-purple-700 rounded-full font-bold hover:bg-gray-100 transition duration-300 shadow-lg">
+                    <a href="{% url 'orders:create_order' %}" class="px-8 py-4 bg-white text-purple-700 rounded-full font-bold hover:bg-gray-100 transition duration-300 shadow-lg">
                         <i class="fas fa-taxi mr-2"></i>Заказать такси
                     </a>
                     <a href="{% url 'orders:list' %}" class="px-8 py-4 border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-purple-700 transition duration-300">
