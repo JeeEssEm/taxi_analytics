@@ -1,5 +1,5 @@
 from django.contrib.auth.views import LoginView
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -7,6 +7,7 @@ from django.views.generic import FormView, View, UpdateView, CreateView
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from orders.serializers import OrderSerializer
 import drivers.forms as driver_forms
 import users.models as users_models
 import orders.models as order_models
@@ -20,7 +21,7 @@ class BecomeDriverView(LoginRequiredMixin, CreateView):
     template_name = "drivers/become.html"
     form_class = driver_forms.DriverForm
     model = cars_models.TaxiCar
-    success_url = reverse_lazy("orders:list")
+    success_url = reverse_lazy("drivers:new_orders")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -32,7 +33,7 @@ class BecomeDriverView(LoginRequiredMixin, CreateView):
 
     def get(self, request, *args, **kwargs):
         if request.user.taxi:
-            return redirect(reverse_lazy('orders:list'))
+            return redirect(reverse_lazy('drivers:new_orders'))
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -55,12 +56,12 @@ class ChangeDriverActivityView(LoginRequiredMixin, View):
         if request.user.taxi.status == drivers_models.TaxiDriver.StatusChoices.INACTIVE:
             request.user.taxi.status = drivers_models.TaxiDriver.StatusChoices.WAITING
             request.user.taxi.save()
-            return redirect(reverse_lazy('orders:list'))
+            return redirect(reverse_lazy('drivers:new_orders'))
         if request.user.taxi.status == drivers_models.TaxiDriver.StatusChoices.WORKING:
            return HttpResponse(status=403, message='You cannot change activity while working')
         request.user.taxi.status = drivers_models.TaxiDriver.StatusChoices.INACTIVE
         request.user.taxi.save()
-        return redirect(reverse_lazy('orders:list'))
+        return redirect(reverse_lazy('drivers:new_orders'))
 
 
 class UpdateDriverInformationView(LoginRequiredMixin, UpdateView):
@@ -80,7 +81,7 @@ class UpdateDriverInformationView(LoginRequiredMixin, UpdateView):
         return self.request.user.taxi
 
     def get_success_url(self):
-        return reverse_lazy('orders:list')
+        return reverse_lazy('drivers:new_orders')
 
     def form_valid(self, form):
         context = self.get_context_data()
@@ -95,3 +96,33 @@ class UpdateDriverInformationView(LoginRequiredMixin, UpdateView):
             self.request.user.save()
             return super().form_valid(form)
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class OrdersListView(LoginRequiredMixin, View):
+    template_name = "drivers/orders.html"
+    context_object_name = "orders"
+    refresh_interval = 15 * 1000  # 15 секунд
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.taxi:
+            return redirect(reverse_lazy("drivers:become"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return order_models.TaxiOrder.objects.all()  # TODO: добавить сортировку по расстоянию и фильтрацию по статусу
+
+    def get(self, request, *args, **kwargs):
+        # если ajax, то возвращаем json
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            orders: list[order_models.TaxiOrder] = self.get_queryset()
+            return JsonResponse(
+                {
+                    'orders': OrderSerializer.get_orders(request, orders),
+                    'refresh_interval': self.refresh_interval,
+                }
+            )
+        return render(
+            request, self.template_name, {
+                'refresh_interval': self.refresh_interval // 1000,
+            }
+        )
