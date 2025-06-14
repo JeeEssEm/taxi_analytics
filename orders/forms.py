@@ -13,5 +13,4 @@ class CreateOrderForm(ModelForm):
             orders_models.TaxiOrder.dropoff_coords.field.name,
             orders_models.TaxiOrder.passenger_count.field.name,
             orders_models.TaxiOrder.expected_duration.field.name,
-
         )

@@ -111,7 +111,7 @@ def get_address_coords(coords_string: str):
 
         url = "https://geocode-maps.yandex.ru/1.x/"
         params = {
-            'apikey': settings.YANDEX_API_KEY,
+            'apikey': settings.YANDEX_MAPS_API_KEY,
             'geocode': f"{lng},{lat}",
             'format': 'json',
             'results': 1,
@@ -137,4 +137,5 @@ def get_address_coords(coords_string: str):
 
 def create_order_signature(order_data):
     signature_string = f"{order_data['pickup_coords']}{order_data['dropoff_coords']}{order_data['passengers']}{order_data['price']}{settings.SECRET_KEY}"
+    # return signature_string
     return hashlib.sha256(signature_string.encode()).hexdigest()[:16]

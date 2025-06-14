@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import json
 from logging import getLogger
 
@@ -8,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import View
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.geos import Point
 from django.views.generic.edit import CreateView
 from django.views.generic.list import ListView, View
 from django.urls import reverse_lazy
@@ -125,9 +127,62 @@ class CreateOrderView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(
             request, self.template_name, {
-                'yandex_api_key': settings.YANDEX_MAPS_API_KEY
+                'yandex_api_key': settings.YANDEX_MAPS_API_KEY,
+                'form': CreateOrderForm(),
             }
         )
 
     def post(self, request, *args, **kwargs):
-        pass
+        data = request.POST
+        print(data)
+        # try:
+        if 1 == 1:
+            # проверяем подпись
+            sig = create_order_signature({
+                'pickup_coords': data.get('pickup_coords'),
+                'dropoff_coords': data.get('dropoff_coords'),
+                'passengers': int(data.get('passengers_count', 1)),
+                'price': float(data.get('order_price', 0)),
+            })
+            current_server_time_utc = datetime.now(timezone.utc)
+
+            pickup_datetime = datetime.fromisoformat(data.get('pickup_datetime'))
+            if data.get('time_type') == 'now':
+                pickup_datetime = current_server_time_utc
+            pickup_datetime = pickup_datetime.replace(second=(pickup_datetime.second + 5) % 60)
+
+            if sig != data.get('order_signature'):
+                LOGGER.error(f'Signature error. Expected: {sig}. Got: {data.get("order_signature")}')
+                return render(request, 'orders/data_corrupted.html')
+            if pickup_datetime < current_server_time_utc:
+                LOGGER.error(f'pickup_datetime is older than now: {pickup_datetime} > {current_server_time_utc}')
+                return render(request, 'orders/data_corrupted.html')
+
+            pickup_verbose = get_address_coords(data.get('pickup_coords'))
+            dropoff_verbose = get_address_coords(data.get('dropoff_coords'))
+
+            order_model = TaxiOrder.objects.create(
+                driver=None,
+                car=None,
+                client=request.user,
+                pickup_datetime=pickup_datetime,
+                pickup_coords=Point(*(map(float, data.get('pickup_coords').split(','))), srid=4326),
+                pickup_verbose=pickup_verbose,
+                dropoff_datetime=None,
+                dropoff_coords=Point(*(map(float, data.get('dropoff_coords').split(','))), srid=4326),
+                dropoff_verbose=dropoff_verbose,
+                passenger_count=int(data.get('passenger_count')),
+                trip_distance_km=float(data.get('distance')),
+                expected_duration=int(data.get('expected_duration')),
+                total=data.get('order_price', 0),
+                comment=data.get('comment', ''),
+                payment_type=int(data.get('payment_type', TaxiOrder.PaymentChoices.CASH)),
+                extra=0,
+                status=TaxiOrder.StatusChoices.PENDING
+            )
+            return redirect('orders:list')  # FIXME: поправить
+
+        # except Exception as e:
+        #     LOGGER.error(f"Order creation error: {e}")
+        #     print(e)
+        #     return render(request, 'orders/data_corrupted.html', {})
