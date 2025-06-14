@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказ такси{% endblock %}
+
+{% block head %}
+  <script>
+    window.YANDEX_API_KEY = '{{ yandex_api_key|escapejs }}';
+    window.CALCULATE_PRICE_URL = '{% url "orders:get_order_price" %}';
+  </script>
+  <script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_api_key }}&lang=ru_RU&load=package.full" type="text/javascript"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="{% static 'css/order_map.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+{% endblock %}
+
+{% block not_centered_content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-8">Заказ такси</h1>
+
+  {% if error %}
+    <div class="error-message">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <div class="w-full lg:w-2/3">
+      <div class="mb-4 flex flex-wrap gap-2">
+        <button id="set-from-map" class="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center btn-pulse hover:bg-purple-700 transition duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          Установить "Откуда"
+        </button>
+        <button id="set-to-map" class="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center btn-pulse hover:bg-green-700 transition duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Установить "Куда"
+        </button>
+        <button id="clear-map" class="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center btn-pulse hover:bg-red-700 transition duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          Очистить
+        </button>
+        <button id="cancel-map-selection" class="px-4 py-2 bg-gray-500 text-white rounded-lg hidden">
+          Отменить выбор
+        </button>
+      </div>
+
+      <div id="route-info" class="mb-4 p-4 route-info rounded-lg hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="font-semibold">Маршрут рассчитан</div>
+            <div class="text-sm opacity-90">
+              Расстояние: <span id="route-distance">-</span> |
+              Время: <span id="route-duration">-</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold" id="route-price">-</div>
+            <div class="text-sm opacity-90">Стоимость поездки</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="map-container" class="rounded-xl overflow-hidden shadow-lg">
+        <div id="map" class="w-full h-full"></div>
+      </div>
+    </div>
+
+    <div class="w-full lg:w-1/3">
+      <form id="taxi-order-form" method="post" class="space-y-6" action="{% url 'orders:create_order' %}">
+        {% csrf_token %}
+
+        <input type="hidden" id="from-coords" name="from_coords" value="{{ form_data.from_coords|default:'' }}">
+        <input type="hidden" id="to-coords" name="to_coords" value="{{ form_data.to_coords|default:'' }}">
+
+        <div class="relative">
+          <label for="from-address" class="block text-gray-700 font-medium mb-2">Откуда</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+            <input type="text" id="from-address" name="from_address" required
+                   class="address-field w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                   placeholder="Введите адрес отправления или выберите на карте"
+                   value="{{ form_data.from_address|default:'' }}"
+                   autocomplete="off">
+            <button type="button" id="get-location" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-purple-600 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              </svg>
+            </button>
+          </div>
+          <div id="from-suggestions" class="address-suggestions hidden"></div>
+        </div>
+
+        <div class="relative">
+          <label for="to-address" class="block text-gray-700 font-medium mb-2">Куда</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <input type="text" id="to-address" name="to_address" required
+                   class="address-field w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                   placeholder="Введите адрес назначения или выберите на карте"
+                   value="{{ form_data.to_address|default:'' }}"
+                   autocomplete="off">
+          </div>
+          <div id="to-suggestions" class="address-suggestions hidden"></div>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Способ оплаты</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-purple-300 cursor-pointer">
+              <input type="radio" name="payment_method" value="cash"
+                     {% if not form_data.payment_method or form_data.payment_method == 'cash' %}checked{% endif %}
+                     class="text-purple-600 focus:ring-purple-500 mr-2">
+              <div>
+                <span class="font-medium">Наличные</span>
+                <p class="text-xs text-gray-500 mt-1">Оплата водителю</p>
+              </div>
+            </label>
+
+            <label class="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-purple-300 cursor-pointer">
+              <input type="radio" name="payment_method" value="card"
+                     {% if form_data.payment_method == 'card' %}checked{% endif %}
+                     class="text-purple-600 focus:ring-purple-500 mr-2">
+              <div>
+                <span class="font-medium">Карта</span>
+                <p class="text-xs text-gray-500 mt-1">Онлайн оплата</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label for="passengers" class="block text-gray-700 font-medium mb-4">
+            Число пассажиров: <span id="passengers-value" class="text-purple-600 font-bold">{{ form_data.passengers|default:"1" }}</span>
+          </label>
+          <div class="flex items-center space-x-4">
+            <button type="button" id="decrease-passengers" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+              </svg>
+            </button>
+
+            <div class="relative w-full">
+              <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="passengers-track" class="h-full bg-purple-600"></div>
+              </div>
+              <input type="range" id="passengers" name="passengers" min="1" max="4" value="{{ form_data.passengers|default:"1" }}"
+                     class="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer">
+            </div>
+
+            <button type="button" id="increase-passengers" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Время подачи</label>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-purple-300 cursor-pointer">
+              <input type="radio" name="time_type" value="now"
+                     {% if not form_data.time_type or form_data.time_type == 'now' %}checked{% endif %}
+                     class="text-purple-600 focus:ring-purple-500 mr-2">
+              <span class="font-medium">Сейчас</span>
+            </label>
+
+            <label class="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-purple-300 cursor-pointer">
+              <input type="radio" name="time_type" value="later"
+                     {% if form_data.time_type == 'later' %}checked{% endif %}
+                     class="text-purple-600 focus:ring-purple-500 mr-2">
+              <span class="font-medium">Позже</span>
+            </label>
+          </div>
+
+          <div id="time-picker-container" class="mt-4 {% if form_data.time_type != 'later' %}hidden{% endif %}">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <input type="text" id="scheduled-time" name="scheduled_time"
+                     class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                     placeholder="Выберите время"
+                     value="{{ form_data.scheduled_time|default:'' }}">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="comment" class="block text-gray-700 font-medium mb-2">Комментарий</label>
+          <textarea id="comment" name="comment" rows="4"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Дополнительные пожелания (подъезд, этаж, особенности адреса и т.д.)">{{ form_data.comment|default:'' }}</textarea>
+        </div>
+
+        <div id="price-container" class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+          <div class="flex justify-between items-center mb-3">
+            <span class="font-medium text-gray-700">Расчет стоимости:</span>
+            <span id="price" class="text-2xl font-bold text-purple-600">-</span>
+          </div>
+
+          <div class="text-sm text-gray-500 space-y-1">
+            <div class="flex justify-between">
+              <span>Расстояние:</span>
+              <span id="distance">-</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Время в пути:</span>
+              <span id="duration">-</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Заказать такси
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/create_order_map.js' %}"></script>
+{% endblock %}

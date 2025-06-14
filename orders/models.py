@@ -22,7 +22,7 @@ class TaxiOrder(models.Model):
         ON_THE_WAY = "ON_THE_WAY" # "В пути"
         DRIVER_WAITING = "DRIVER_WAITING" # "Водитель на месте"
 
-    status = models.CharField(choices=StatusChoices.choices)
+    status = models.CharField(choices=StatusChoices.choices, default=StatusChoices.PENDING)
 
     pickup_datetime = models.DateTimeField(null=True, blank=True)
     pickup_coords = models.GeometryField(geography=True)
@@ -42,3 +42,4 @@ class TaxiOrder(models.Model):
     extra = models.PositiveIntegerField()
     total = models.PositiveIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(max_length=2000, blank=True, null=True)

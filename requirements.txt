@@ -9,3 +9,4 @@ GDAL==3.6.2
 Pillow
 PyJWT==2.10.1
 sorl-thumbnail==12.11.0
+openrouteservice==2.3.3

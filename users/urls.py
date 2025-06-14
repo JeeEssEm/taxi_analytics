@@ -12,7 +12,7 @@ urlpatterns = [
         views.ModifiedLoginView.as_view(
             template_name="users/login.html",
             redirect_authenticated_user=True,
-            success_url=reverse_lazy("home:index"),
+            success_url=reverse_lazy("orders:create_order"),
         ),
         name="login",
     ),
