@@ -21,6 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setTimeout(() => {
             priceCalculator.scheduleCalculatePrice();
-        }, 50000);
+        }, 200);
     });
 });

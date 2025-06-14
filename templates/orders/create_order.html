@@ -277,11 +277,10 @@
 {% endblock %}
 
 {% block scripts %}
-  {#  <script src="{% static 'js/create_order_map.js' %}"></script>#}
-  <script type="module" src="{% static 'js/order/order-form-main.js' %}"></script>
-  <script type="module" src="{% static 'js/order/modules/address-autocomplete.js' %}"></script>
-  <script type="module" src="{% static 'js/order/modules/map-manager.js' %}"></script>
-  <script type="module" src="{% static 'js/order/modules/order-form.js' %}"></script>
-  <script type="module" src="{% static 'js/order/modules/price-calculator.js' %}"></script>
-  <script type="module" src="{% static 'js/order/modules/utils.js' %}"></script>
+  <script type="module" src="{% static 'js/create_order/entrypoint.js' %}"></script>
+  <script type="module" src="{% static 'js/create_order/modules/address-autocomplete.js' %}"></script>
+  <script type="module" src="{% static 'js/create_order/modules/map-manager.js' %}"></script>
+  <script type="module" src="{% static 'js/create_order/modules/order-form.js' %}"></script>
+  <script type="module" src="{% static 'js/create_order/modules/price-calculator.js' %}"></script>
+  <script type="module" src="{% static 'js/create_order/modules/utils.js' %}"></script>
 {% endblock %}

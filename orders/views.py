@@ -3,20 +3,23 @@ import json
 from logging import getLogger
 
 from django.http import Http404, HttpRequest, JsonResponse
-from django.shortcuts import render, redirect
+from django.http.response import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
-from django.views.generic.edit import CreateView
-from django.views.generic.list import ListView, View
+from django.views.generic import DetailView, View
 from django.urls import reverse_lazy
 from django.conf import settings
 
 from orders.exceptions import RouteCannotBeBuiltException
-from orders.utils import get_order_summary, get_address_coords, create_order_signature
+from orders.utils import (
+    get_order_summary, get_address_coords, create_order_signature, get_status_info,
+    add_driver_to_context
+)
 from orders.forms import CreateOrderForm
 from orders.serializers import OrderSerializer
 from orders.models import TaxiOrder, TaxiDriver, TaxiUser
@@ -134,16 +137,17 @@ class CreateOrderView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         data = request.POST
-        print(data)
-        # try:
-        if 1 == 1:
+        LOGGER.info(f'Received create order data: {data}')
+        try:
             # проверяем подпись
-            sig = create_order_signature({
-                'pickup_coords': data.get('pickup_coords'),
-                'dropoff_coords': data.get('dropoff_coords'),
-                'passengers': int(data.get('passengers_count', 1)),
-                'price': float(data.get('order_price', 0)),
-            })
+            sig = create_order_signature(
+                {
+                    'pickup_coords': data.get('pickup_coords'),
+                    'dropoff_coords': data.get('dropoff_coords'),
+                    'passengers': int(data.get('passengers_count', 1)),
+                    'price': float(data.get('order_price', 0)),
+                }
+            )
             current_server_time_utc = datetime.now(timezone.utc)
 
             pickup_datetime = datetime.fromisoformat(data.get('pickup_datetime'))
@@ -161,7 +165,7 @@ class CreateOrderView(LoginRequiredMixin, View):
             pickup_verbose = get_address_coords(data.get('pickup_coords'))
             dropoff_verbose = get_address_coords(data.get('dropoff_coords'))
 
-            order_model = TaxiOrder.objects.create(
+            TaxiOrder.objects.create(
                 driver=None,
                 car=None,
                 client=request.user,
@@ -182,7 +186,84 @@ class CreateOrderView(LoginRequiredMixin, View):
             )
             return redirect('orders:list')  # FIXME: поправить
 
-        # except Exception as e:
-        #     LOGGER.error(f"Order creation error: {e}")
-        #     print(e)
-        #     return render(request, 'orders/data_corrupted.html', {})
+        except Exception as e:
+            LOGGER.error(f"Order creation error: {e}")
+            return render(request, 'orders/data_corrupted.html')
+
+
+class OrderDetailView(LoginRequiredMixin, DetailView):
+    template_name = "orders/order_driver_detail.html"
+    model = TaxiOrder
+    context_object_name = "order"
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        return TaxiOrder.objects.filter(pk=pk)
+
+    def get(self, request, *args, **kwargs):
+        order: TaxiOrder = self.get_queryset().first()
+        if not order:
+            return HttpResponse(status=404)
+        if order.client == request.user:
+            context = {
+                'order': order,
+                'pickup_coords': [order.pickup_coords.y, order.pickup_coords.x][::-1],
+                'dropoff_coords': [order.dropoff_coords.y, order.dropoff_coords.x][::-1],
+                'status_info': get_status_info(order.status),
+                'can_cancel': order.status in (TaxiOrder.StatusChoices.WAITING_FOR_DRIVER, TaxiOrder.StatusChoices.PENDING),
+                'yandex_api_key': settings.YANDEX_MAPS_API_KEY,
+                'has_driver': order.driver is not None,
+                'has_car': order.car is not None,
+            }
+            if order.driver:
+                add_driver_to_context(context, order, request)
+            return render(
+                request,
+                'orders/order_client_detail.html',
+                context=context
+            )
+        if order.driver.user == request.user:
+            return render(request, 'orders/order_driver_detail.html')
+        return HttpResponse(status=404)
+
+
+class OrderStatusView(View):
+    def get(self, request, pk):
+        try:
+            order = get_object_or_404(TaxiOrder, id=pk)
+
+            if order.client != request.user and (order.driver and order.driver.user != request.user):
+                return JsonResponse({'error': 'Access denied'}, status=403)
+            status_info = get_status_info(order.status)
+            data = {
+                'status': order.status,
+                'status_display': status_info['display'],
+                'status_color': status_info['color'],
+                'status_icon': status_info['icon'],
+                'status_description': status_info['description'],
+                'updated_at': order.created_at.isoformat(),
+                'has_driver': order.driver is not None,
+                'has_car': order.car is not None,
+            }
+
+            if order.driver is not None:
+                add_driver_to_context(data, order, request)
+
+            return JsonResponse(data)
+        except Exception as e:
+            LOGGER.exception(f"Error occurred during getting order status: {e}")
+            return JsonResponse({'error': 'Something went wrong'}, status=500)
+
+
+class CancelOrderView(View):
+    def post(self, request, pk, *args, **kwargs):
+        order: TaxiOrder = get_object_or_404(TaxiOrder, id=pk)
+        if (request.user == order.client and order.status in (
+                order.StatusChoices.PENDING,
+                order.StatusChoices.WAITING_FOR_DRIVER
+        )) or request.user == order.driver:
+            order.status = order.StatusChoices.CANCELLED
+            order.save()
+            return JsonResponse({'success': True, 'display': 'Заказ успешно отменен'})
+
+        return JsonResponse({'success': False, 'message': 'Access denied'}, status=403)

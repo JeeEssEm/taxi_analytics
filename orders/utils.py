@@ -3,9 +3,11 @@ from logging import getLogger
 
 from django.conf import settings
 import requests
+
 from drivers.models import TaxiDriver
 from orders.exceptions import RouteCannotBeBuiltException
 from orders.models import TaxiOrder
+from orders.serializers import OrderSerializer
 
 LOGGER = getLogger(__name__)
 
@@ -137,5 +139,69 @@ def get_address_coords(coords_string: str):
 
 def create_order_signature(order_data):
     signature_string = f"{order_data['pickup_coords']}{order_data['dropoff_coords']}{order_data['passengers']}{order_data['price']}{settings.SECRET_KEY}"
-    # return signature_string
     return hashlib.sha256(signature_string.encode()).hexdigest()[:16]
+
+
+def get_status_info(status):
+    status_map = {
+        TaxiOrder.StatusChoices.PENDING: {
+            'display': 'Поиск водителя',
+            'color': 'yellow',
+            'icon': '⏳',
+            'description': 'Ищем для вас водителя. Пожалуйста, подождите.'
+        },
+        TaxiOrder.StatusChoices.WAITING_FOR_DRIVER: {
+            'display': 'Водитель в пути',
+            'color': 'blue',
+            'icon': '🚗',
+            'description': 'Водитель принял заказ и едет к месту подачи'
+        },
+        TaxiOrder.StatusChoices.DRIVER_WAITING: {
+            'display': 'Водитель на месте',
+            'color': 'purple',
+            'icon': '📍',
+            'description': 'Водитель прибыл и ждет вас на месте подачи'
+        },
+        TaxiOrder.StatusChoices.ON_THE_WAY: {
+            'display': 'В пути',
+            'color': 'indigo',
+            'icon': '🛣️',
+            'description': 'Поездка началась, вы едете к месту назначения'
+        },
+        TaxiOrder.StatusChoices.DONE: {
+            'display': 'Завершен',
+            'color': 'green',
+            'icon': '🏁',
+            'description': 'Поездка успешно завершена'
+        },
+        TaxiOrder.StatusChoices.CANCELLED: {
+            'display': 'Отменен',
+            'color': 'red',
+            'icon': '❌',
+            'description': 'Заказ был отменен'
+        }
+    }
+    return status_map.get(status, {
+        'display': 'Неизвестно',
+        'color': 'gray',
+        'icon': '❓',
+        'description': 'Статус неизвестен'
+    })
+
+
+def add_driver_to_context(context: dict, order: TaxiOrder, request):
+    driver_data = {
+        'name': order.driver.user.get_full_name(),
+        'phone': order.driver.user.phone or None,
+        'image_url': OrderSerializer.get_user_image(order.driver.user, request),
+    }
+    if order.car is not None:
+        driver_data.update(
+            {
+                'car_model': f"{order.car.car_manufacture} {order.car.car_model}",
+                'car_number': order.car.plate_number,
+                'car_color': order.car.car_color,
+                'car_year': order.car.year,
+            }
+        )
+    context['driver'] = driver_data
