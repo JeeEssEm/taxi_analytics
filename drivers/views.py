@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import json
 
 from django.contrib.auth.views import LoginView
-from django.http.response import HttpResponse, JsonResponse
+from django.http.response import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -11,7 +11,6 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
 
-from drivers.models import TaxiDriver
 from orders.utils import get_status_info
 from orders.serializers import OrderSerializer
 from drivers.mixins import UserIsDriverOfOrderMixin, DriverInformationMixin
@@ -178,9 +177,12 @@ class OrderStatusUpdateView(LoginRequiredMixin, UserIsDriverOfOrderMixin, View):
         if status == order_models.TaxiOrder.StatusChoices.DONE:
             self.order.dropoff_datetime = datetime.now()
             # TODO: проверка на extra
-            self.order.driver.status = TaxiDriver.StatusChoices.WAITING
+            self.order.driver.status = drivers_models.TaxiDriver.StatusChoices.WAITING
             self.order.driver.save()
-            response_data["redirect_url"] = reverse_lazy("orders:history")  # FIXME: on TaxiReview
+            response_data["redirect_url"] = reverse_lazy("reviews:review", kwargs={"pk": self.order.id})
+        if status == order_models.TaxiOrder.StatusChoices.CANCELLED:
+            self.order.driver.status = drivers_models.TaxiDriver.StatusChoices.WAITING
+            self.order.driver.save()
 
         self.order.save()
         return JsonResponse(response_data)
@@ -203,3 +205,17 @@ class OrderStatusView(LoginRequiredMixin, UserIsDriverOfOrderMixin, View):
         }
 
         return JsonResponse(data)
+
+
+class TakeOrderView(LoginRequiredMixin, UserIsDriverOfOrderMixin, View):
+    def post(self, request, *args, **kwargs):
+        if order_models.TaxiOrder.objects.get_active_order_driver(self.request.user).exists():
+            return HttpResponseBadRequest()
+        driver: drivers_models.TaxiDriver = self.request.user.taxi
+        self.order.driver = driver
+        self.order.car = driver.car
+        self.order.status = order_models.TaxiOrder.StatusChoices.WAITING_FOR_DRIVER
+        self.order.save()
+        driver.status = drivers_models.TaxiDriver.StatusChoices.WORKING
+        driver.save()
+        return redirect(reverse_lazy("drivers:order_detail", kwargs={"pk": self.order.id}))

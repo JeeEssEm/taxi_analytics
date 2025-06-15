@@ -155,7 +155,7 @@ class CreateOrderView(LoginRequiredMixin, View):
                 extra=0,
                 status=TaxiOrder.StatusChoices.PENDING
             )
-            return redirect('orders:detail', kwargs={'pk': new_order.id})
+            return redirect(reverse_lazy('orders:detail', kwargs={'pk': new_order.id}))
 
         except Exception as e:
             LOGGER.error(f"Order creation error: {e}")
@@ -239,6 +239,9 @@ class CancelOrderView(View):
         )) or request.user == order.driver:
             order.status = order.StatusChoices.CANCELLED
             order.save()
+            if order.driver:
+                order.driver.status = TaxiDriver.StatusChoices.WAITING
+                order.driver.save()
             return JsonResponse({'success': True, 'display': 'Заказ успешно отменен'})
 
         return JsonResponse({'success': False, 'message': 'Access denied'}, status=403)

@@ -8,7 +8,7 @@ from orders.models import TaxiOrder
 class UserIsDriverOfOrderMixin:
     def dispatch(self, request, *args, **kwargs):
         self.order = get_object_or_404(TaxiOrder, pk=self.kwargs.get('pk'))
-        if self.order.driver != request.user.taxi:
+        if self.order.driver and self.order.driver != request.user.taxi:
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 

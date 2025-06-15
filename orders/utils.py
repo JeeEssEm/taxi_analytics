@@ -1,4 +1,6 @@
+import hmac
 import hashlib
+import json
 from logging import getLogger
 
 from django.conf import settings
@@ -151,8 +153,21 @@ def create_order_signature(order_data):
     """
     :returns: уникальная подпись заказа
     """
-    signature_string = f"{order_data['pickup_coords']}{order_data['dropoff_coords']}{order_data['passengers']}{order_data['price']}{settings.SECRET_KEY}"
-    return hashlib.sha256(signature_string.encode()).hexdigest()[:16]
+    normalized_data = {
+        'pickup_coords': order_data['pickup_coords'],
+        'dropoff_coords': order_data['dropoff_coords'],
+        'passengers': int(order_data['passengers']),
+        'price': float(order_data['price']),
+    }
+
+    data_string = json.dumps(normalized_data, sort_keys=True, ensure_ascii=False)
+
+    signature = hmac.new(
+        settings.SECRET_KEY.encode(),
+        msg=data_string.encode(),
+        digestmod=hashlib.sha256
+    )
+    return signature.hexdigest()
 
 
 def get_status_info(status):

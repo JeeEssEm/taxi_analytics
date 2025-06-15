@@ -304,13 +304,16 @@
                 </div>
               </div>
             </div>
-            <button class="take-order-btn px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
-                   stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              Взять
-            </button>
+            <form action="" method="post" class="take-order-form">
+              {% csrf_token %}
+              <button class="take-order-btn px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Взять
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -371,6 +374,7 @@
                   clone.querySelector('.created-at').textContent = order.created_at;
                   clone.querySelector('.passenger-name').textContent = order.passenger.name;
                   clone.querySelector('.passenger-rating').textContent = order.passenger.rating.toFixed(1);
+                  clone.querySelector('.take-order-form').action = `/drivers/orders/${order.id}/take/`;
 
                   const btn = clone.querySelector('.take-order-btn');
                   btn.addEventListener('click', function () {

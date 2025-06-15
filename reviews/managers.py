@@ -8,3 +8,10 @@ class ReviewManager(Manager):
         .aggregate(
             rating=Avg('driver_mark')
         ))['rating'] or 0
+
+    def get_driver_rating(self, driver):
+        return (self
+        .filter(order__driver=driver)
+        .aggregate(
+            rating=Avg('client_mark')
+        ))['rating'] or 0
