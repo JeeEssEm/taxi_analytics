@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import json
 from logging import getLogger
-from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse
@@ -164,7 +163,7 @@ class CreateOrderView(LoginRequiredMixin, View):
 
 
 class OrderDetailView(LoginRequiredMixin, DetailView):
-    template_name = "orders/order_driver_detail.html"
+    template_name = "orders/order_client_detail.html"
     model = TaxiOrder
     context_object_name = "order"
 
@@ -182,7 +181,11 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
                 'pickup_coords': [order.pickup_coords.y, order.pickup_coords.x][::-1],
                 'dropoff_coords': [order.dropoff_coords.y, order.dropoff_coords.x][::-1],
                 'status_info': get_status_info(order.status),
-                'can_cancel': order.status in (TaxiOrder.StatusChoices.WAITING_FOR_DRIVER, TaxiOrder.StatusChoices.PENDING),
+                'can_cancel': order.status in (
+                    TaxiOrder.StatusChoices.WAITING_FOR_DRIVER,
+                    TaxiOrder.StatusChoices.PENDING,
+                    TaxiOrder.StatusChoices.DRIVER_WAITING,
+                ),
                 'yandex_api_key': settings.YANDEX_MAPS_API_KEY,
                 'has_driver': order.driver is not None,
                 'has_car': order.car is not None,
@@ -191,11 +194,11 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
                 add_driver_to_context(context, order, request)
             return render(
                 request,
-                'orders/order_client_detail.html',
+                self.template_name,
                 context=context
             )
         if order.driver.user == request.user:
-            return render(request, 'orders/order_driver_detail.html')
+            return redirect(reverse_lazy('drivers:order_detail', kwargs={'pk': order.id}))
         return HttpResponse(status=404)
 
 

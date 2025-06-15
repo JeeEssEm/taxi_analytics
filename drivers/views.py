@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+import json
+
 from django.contrib.auth.views import LoginView
 from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -6,9 +9,13 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, View, UpdateView, CreateView, ListView
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.detail import DetailView
 
+from drivers.models import TaxiDriver
 from orders.utils import get_status_info
 from orders.serializers import OrderSerializer
+from drivers.mixins import UserIsDriverOfOrderMixin, DriverInformationMixin
+from drivers.utils import get_available_driver_actions
 import drivers.forms as driver_forms
 import users.models as users_models
 import orders.models as order_models
@@ -18,7 +25,7 @@ import drivers.models as drivers_models
 import cars.models as cars_models
 
 
-class BecomeDriverView(LoginRequiredMixin, CreateView):
+class BecomeDriverView(LoginRequiredMixin, DriverInformationMixin, CreateView):
     template_name = "drivers/become.html"
     form_class = driver_forms.DriverForm
     model = cars_models.TaxiCar
@@ -37,20 +44,6 @@ class BecomeDriverView(LoginRequiredMixin, CreateView):
             return redirect(reverse_lazy('drivers:new_orders'))
         return super().get(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        car_form = context['car_form']
-        if car_form.is_valid():
-            car = car_form.save()
-            self.object = form.save(commit=False)
-            self.object.car = car
-            self.object = form.save()
-
-            self.request.user.taxi = self.object
-            self.request.user.save()
-            return super().form_valid(form)
-        return self.render_to_response(self.get_context_data(form=form))
-
 
 class ChangeDriverActivityView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
@@ -65,7 +58,7 @@ class ChangeDriverActivityView(LoginRequiredMixin, View):
         return redirect(reverse_lazy('drivers:new_orders'))
 
 
-class UpdateDriverInformationView(LoginRequiredMixin, UpdateView):
+class UpdateDriverInformationView(LoginRequiredMixin, DriverInformationMixin, UpdateView):
     model = drivers_models.TaxiDriver
     form_class = driver_forms.DriverForm
     template_name = 'drivers/edit_information.html'
@@ -83,20 +76,6 @@ class UpdateDriverInformationView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('drivers:new_orders')
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        car_form = context['car_form']
-        if car_form.is_valid():
-            car = car_form.save()
-            self.object = form.save(commit=False)
-            self.object.car = car
-            self.object = form.save()
-
-            self.request.user.taxi = self.object
-            self.request.user.save()
-            return super().form_valid(form)
-        return self.render_to_response(self.get_context_data(form=form))
 
 
 class OrdersListView(LoginRequiredMixin, View):
@@ -122,17 +101,21 @@ class OrdersListView(LoginRequiredMixin, View):
                     'refresh_interval': self.refresh_interval,
                 }
             )
-        return render(
-            request, self.template_name, {
+        context = {
                 'refresh_interval': self.refresh_interval // 1000,
             }
+        active_order = order_models.TaxiOrder.objects.get_active_order_driver(self.request.user.id).first()
+        if active_order:
+            context['active_order'] = active_order
+        return render(
+            request, self.template_name, context
         )
 
 
 class OrdersHistoryView(LoginRequiredMixin, ListView):
     template_name = "drivers/history.html"
     context_object_name = "orders"
-    paginate_by = 1
+    paginate_by = 5
 
     def get_queryset(self):
         return order_models.TaxiOrder.objects.get_completed_orders_by_driver(self.request.user.id)
@@ -144,3 +127,73 @@ class OrdersHistoryView(LoginRequiredMixin, ListView):
             context['active_order'] = active_order
             context['active_order_status'] = get_status_info(active_order.status)
         return context
+
+
+class OrderDetailView(LoginRequiredMixin, UserIsDriverOfOrderMixin,  DetailView):
+    template_name = "drivers/order_driver_detail.html"
+    context_object_name = "order"
+
+    def get(self, request, *args, **kwargs):
+        context = {
+            "order": self.order,
+            "status_info": get_status_info(self.order.status),
+            "yandex_api_key": settings.YANDEX_MAPS_API_KEY,
+            "pickup_coords": [self.order.pickup_coords.y, self.order.pickup_coords.x][::-1],
+            "dropoff_coords": [self.order.dropoff_coords.y, self.order.dropoff_coords.x][::-1],
+            "available_actions": json.dumps(get_available_driver_actions(self.order.status))
+        }
+        return render(request, self.template_name, context)
+
+
+class OrderStatusUpdateView(LoginRequiredMixin, UserIsDriverOfOrderMixin, View):
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        status = data.get("status")
+        correct_statuses = list(map(lambda c: c[0], order_models.TaxiOrder.StatusChoices.choices))
+        if self.order.status in (
+            order_models.TaxiOrder.StatusChoices.DONE,
+            order_models.TaxiOrder.StatusChoices.CANCELLED
+        ):
+            return JsonResponse({
+                "success": False,
+                "message": "Order already completed"
+            }, status=403)
+        if status not in correct_statuses:
+            return JsonResponse({
+                "success": False,
+                "message": f"Status incorrect. Valid statuses: {correct_statuses}"
+            }, status=403)
+        self.order.status = status
+        response_data = {
+            "success": True,
+            "new_status": status,
+            "old_status": self.order.status,
+        }
+        if status == order_models.TaxiOrder.StatusChoices.DONE:
+            self.order.dropoff_datetime = datetime.now()
+            # TODO: проверка на extra
+            self.order.driver.status = TaxiDriver.StatusChoices.WAITING
+            self.order.driver.save()
+            response_data["redirect_url"] = reverse_lazy("orders:history")  # FIXME: on TaxiReview
+
+        self.order.save()
+        return JsonResponse(response_data)
+
+
+class OrderStatusView(LoginRequiredMixin, UserIsDriverOfOrderMixin, View):
+    def get(self, request, *args, **kwargs):
+        status_info = get_status_info(self.order.status)
+        available_actions = get_available_driver_actions(self.order.status)
+
+        data = {
+            'status': self.order.status,
+            'status_display': status_info['display'],
+            'status_color': status_info['color'],
+            'status_icon': status_info['icon'],
+            'status_description': status_info.get('description', ''),
+            'available_actions': available_actions,
+            'client_name': self.order.client.get_full_name(),
+            'client_phone': self.order.client.phone,
+        }
+
+        return JsonResponse(data)
