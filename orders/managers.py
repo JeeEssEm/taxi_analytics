@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Count, Sum, ExpressionWrapper, DurationField, F, Manager
+from django.db.models import Count, Sum, ExpressionWrapper, DurationField, F, Manager, Q
 
 
 class OrderManager(Manager):
@@ -30,3 +30,19 @@ class OrderManager(Manager):
         ).aggregate(
             total_count=Count('id')
         )['total_count'] or 0
+
+    def get_active_order(self, user_id: int):
+        return (
+            self
+            .filter(client_id=user_id)
+            .filter(~Q(status="DONE"))
+            .filter(~Q(status="CANCELLED"))
+        )
+
+    def get_completed_orders(self, user_id: int):
+        return (
+            self
+            .filter(client_id=user_id)
+            .filter(Q(status="DONE") | Q(status="CANCELLED"))
+            .order_by('-created_at')
+        )

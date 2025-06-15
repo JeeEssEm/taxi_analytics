@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import json
 from logging import getLogger
+from urllib import request
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse
@@ -92,6 +93,12 @@ class CalculateOrderPriceView(View):
 class CreateOrderView(LoginRequiredMixin, View):
     template_name = "orders/create_order.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        active_order = TaxiOrder.objects.get_active_order(request.user.id).first()
+        if active_order:
+            return redirect(reverse_lazy('orders:detail', kwargs={'pk': active_order.id}))
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         return render(
             request, self.template_name, {
@@ -130,7 +137,7 @@ class CreateOrderView(LoginRequiredMixin, View):
             pickup_verbose = get_address_coords(data.get('pickup_coords'))
             dropoff_verbose = get_address_coords(data.get('dropoff_coords'))
 
-            TaxiOrder.objects.create(
+            new_order = TaxiOrder.objects.create(
                 driver=None,
                 car=None,
                 client=request.user,
@@ -149,7 +156,7 @@ class CreateOrderView(LoginRequiredMixin, View):
                 extra=0,
                 status=TaxiOrder.StatusChoices.PENDING
             )
-            return redirect('drivers:new_orders')  # FIXME: поправить
+            return redirect('orders:detail', kwargs={'pk': new_order.id})
 
         except Exception as e:
             LOGGER.error(f"Order creation error: {e}")
@@ -235,8 +242,18 @@ class CancelOrderView(View):
 
 
 class OrdersHistoryView(LoginRequiredMixin, ListView):
-    template_name = ''
+    template_name = 'orders/history.html'
     context_object_name = 'orders'
+    paginate_by = 5
 
     def get_queryset(self):
-        return TaxiOrder.objects.filter(client_id=self.request.user.id)
+        return TaxiOrder.objects.get_completed_orders(self.request.user.id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        active_order = TaxiOrder.objects.get_active_order(self.request.user.id).first()
+        context['total_orders'] = self.get_queryset().count()
+        context['active_order'] = active_order
+        context['active_order_status'] = get_status_info(active_order.status)
+
+        return context

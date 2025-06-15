@@ -10,9 +10,9 @@ from users.models import TaxiUser
 class TaxiOrder(models.Model):
     objects = OrderManager()
 
-    driver = models.OneToOneField(TaxiDriver, null=True, on_delete=models.CASCADE)
-    car = models.OneToOneField(TaxiCar, null=True, on_delete=models.CASCADE)
-    client = models.OneToOneField(TaxiUser, null=False, on_delete=models.CASCADE)
+    driver = models.ForeignKey(TaxiDriver, null=True, on_delete=models.CASCADE)
+    car = models.ForeignKey(TaxiCar, null=True, on_delete=models.CASCADE)
+    client = models.ForeignKey(TaxiUser, null=False, on_delete=models.CASCADE)
 
     class StatusChoices(models.TextChoices):
         CANCELLED = "CANCELLED" # "Отменен"
