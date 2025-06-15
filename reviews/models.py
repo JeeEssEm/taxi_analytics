@@ -8,8 +8,6 @@ from drivers.models import TaxiDriver
 
 class TaxiReview(models.Model):
     objects = managers.ReviewManager()
-    driver = models.ForeignKey(TaxiDriver, on_delete=models.CASCADE)
-    client = models.ForeignKey(TaxiUser, on_delete=models.CASCADE)
     order = models.OneToOneField(
         'orders.TaxiOrder',
         on_delete=models.CASCADE,

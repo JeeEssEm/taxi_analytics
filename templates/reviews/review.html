@@ -1,152 +1,266 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оценка поездки | Такси-сервис</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-8 max-w-md">
-        <!-- Шапка -->
-        <header class="mb-8 text-center">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Оцените поездку</h1>
-            <p class="text-gray-600">Поездка #A7B92C • 21 апреля 2024</p>
-        </header>
+{% extends 'base.html' %}
+{% load static %}
+{% load sorl_thumbnail %}
 
-        <!-- Форма оценки -->
-        <form id="feedbackForm" class="space-y-6">
-            <!-- Рейтинг -->
-            <div class="text-center">
-                <div class="flex justify-center space-x-2 mb-4" id="starRating">
-                    <!-- Звёзды будут добавлены через JS -->
-                </div>
-                <p class="text-sm text-gray-500" id="ratingText">Нажмите для оценки</p>
-            </div>
+{% block title %}
+  Оценить поездку
+{% endblock %}
 
-            <!-- Быстрый выбор -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-3">Отметьте, если применимо:</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
-                        <span>Вежливый водитель</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
-                        <span>Чистый салон</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
-                        <span>Быстрая подача</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
-                        <span>Комфортная езда</span>
-                    </label>
-                </div>
-            </div>
+{% block head %}
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .star {
+      transition: color 0.2s ease;
+      user-select: none;
+    }
+    textarea {
+      resize: none;
+    }
+    .star:hover {
+      transform: scale(1.1);
+    }
+  </style>
+{% endblock %}
 
-            <!-- Текстовый отзыв -->
-            <div>
-                <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Ваш отзыв (необязательно)</label>
-                <textarea id="comment" rows="4" 
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                          placeholder="Что особенно понравилось или можно улучшить?"></textarea>
-                <p class="text-right text-xs text-gray-500 mt-1"><span id="charCount">0</span>/500</p>
-            </div>
+{% block not_centered_content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
 
-            <!-- Кнопка (теперь синяя) -->
-            <button type="submit" 
-                    class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center space-x-2">
-                <i class="fas fa-paper-plane"></i>
-                <span>Отправить отзыв</span>
-            </button>
-        </form>
+  <header class="mb-8 text-center">
+    <div class="w-20 h-20 bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-star text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 text-2xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+      {% if user_role == 'driver' %}Оценить клиента{% else %}Оценить водителя{% endif %}
+    </h1>
+    <p class="text-gray-600">Заказ #{{ order.id }} • {{ order.created_at|date:"d.m.Y" }}</p>
+  </header>
 
-        <!-- Блок благодарности (скрыт по умолчанию) -->
-        <div id="thankYouMessage" class="hidden text-center py-10">
-            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-check text-blue-600 text-2xl"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">Спасибо за отзыв!</h2>
-            <p class="text-gray-600 mb-6">Ваше мнение помогает нам стать лучше</p>
-            <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Вернуться на главную</a>
+  <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div class="flex items-center space-x-4">
+      {% thumbnail target_person.image "16x16" crop="center" as img%}
+        <img src="{{ img.url }}" alt="Фото" class="w-16 h-16 rounded-full object-cover">
+      {% empty %}
+        <div class="w-16 h-16 bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+          {{ target_person.first_name.0|upper }}{{ target_person.last_name.0|upper }}
         </div>
+      {% endthumbnail %}
+      <div class="flex-1">
+        <h3 class="text-xl font-bold text-gray-800">{{ target_person.get_full_name }}</h3>
+        {% if user_role == 'driver' %}
+          <p class="text-gray-600">{{ order.passenger_count }} пассажир{{ order.passenger_count|pluralize:"а,ов" }}</p>
+        {% else %}
+          {% if order.car %}
+          <p class="text-gray-600">{{ order.car.car_manufacture }} {{ order.car.car_model }}</p>
+          {% endif %}
+        {% endif %}
+        <p class="text-sm text-gray-500">{{ order.pickup_verbose }} → {{ order.dropoff_verbose }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-2xl font-bold text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600">{{ order.total }} ₽</p>
+        <p class="text-sm text-gray-500">
+          {% if order.status == 'DONE' %}Завершена{% else %}Отменена{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <form method="post" id="feedbackForm" class="space-y-6">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="text-center">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Как прошла поездка?</h2>
+        <div class="flex justify-center space-x-3 mb-4" id="starRating">
+
+        </div>
+        <p class="text-sm text-gray-600" id="ratingText">Нажмите для оценки</p>
+        <input type="hidden" id="rating-input" name="rating" required>
+      </div>
     </div>
 
-    <script>
-        // Инициализация звёздного рейтинга
-        const starRating = document.getElementById('starRating');
-        const ratingText = document.getElementById('ratingText');
-        const ratingTexts = ['Ужасно', 'Плохо', 'Нормально', 'Хорошо', 'Отлично'];
-        
-        for (let i = 1; i <= 5; i++) {
-            const star = document.createElement('div');
-            star.className = 'text-3xl text-gray-300 cursor-pointer star';
-            star.dataset.value = i;
-            star.innerHTML = '★';
-            star.addEventListener('mouseover', hoverStar);
-            star.addEventListener('click', setRating);
-            starRating.appendChild(star);
-        }
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">
+        Ваш отзыв <span class="text-gray-500">(необязательно)</span>
+      </label>
+      <textarea id="comment" name="comment" rows="4" maxlength="5000"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-500 focus:border-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-500 transition"
+                placeholder="{% if user_role == 'driver' %}Расскажите о клиенте...{% else %}Что особенно понравилось или можно улучшить?{% endif %}"></textarea>
+      <p class="text-right text-xs text-gray-500 mt-1">
+        <span id="charCount">0</span>/5000
+      </p>
+    </div>
 
-        function hoverStar(e) {
-            const hoverValue = e.target.dataset.value;
-            const stars = document.querySelectorAll('.star');
-            
-            stars.forEach(star => {
-                star.style.color = star.dataset.value <= hoverValue ? '#f59e0b' : '#d1d5db';
-            });
-        }
+    <div class="flex space-x-4">
+      <button type="submit" id="submit-btn" disabled
+              class="flex-1 py-3 bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 text-white rounded-lg hover:bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center justify-center space-x-2">
+        <i class="fas fa-paper-plane"></i>
+        <span>Отправить отзыв</span>
+      </button>
 
-        function setRating(e) {
-            const selectedValue = e.target.dataset.value;
-            const stars = document.querySelectorAll('.star');
-            
-            stars.forEach(star => {
-                star.style.color = star.dataset.value <= selectedValue ? '#f59e0b' : '#d1d5db';
-                star.removeEventListener('mouseover', hoverStar);
-            });
-            
-            ratingText.textContent = ratingTexts[selectedValue - 1];
-            document.querySelectorAll('.star').forEach(s => {
-                s.removeEventListener('mouseover', hoverStar);
-            });
-        }
+      {% if can_skip %}
+      <button type="button" onclick="skipRating()"
+              class="bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 px-6 rounded-lg transition flex items-center space-x-2">
+        <i class="fas fa-times"></i>
+        <span>Пропустить</span>
+      </button>
+      {% endif %}
+    </div>
+  </form>
 
-        // Счетчик символов
-        const comment = document.getElementById('comment');
-        const charCount = document.getElementById('charCount');
-        
-        comment.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
+  <!-- Блок благодарности (скрыт по умолчанию) -->
+  <div id="thankYouMessage" class="hidden text-center py-10">
+    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-check text-green-600 text-3xl"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Спасибо за отзыв!</h2>
+    <p class="text-gray-600 mb-6">Ваше мнение помогает нам стать лучше</p>
+    <a href="{{ back_url.url }}" class="text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 hover:text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-800 font-medium">
+      Вернуться к {% if user_role == 'driver' %}поездкам{% else %}заказам{% endif %}
+    </a>
+  </div>
+
+  <!-- Кнопка назад -->
+  <div class="text-center mt-8" id="backButton">
+    <a href="{{ back_url.url }}" class="text-gray-600 hover:text-gray-800 flex items-center justify-center space-x-2">
+      <i class="fas fa-arrow-left"></i>
+      <span>Вернуться к {% if user_role == 'driver' %}поездкам{% else %}заказам{% endif %}</span>
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Инициализация звёздного рейтинга
+  const starRating = document.getElementById('starRating');
+  const ratingText = document.getElementById('ratingText');
+  const ratingInput = document.getElementById('rating-input');
+  const submitBtn = document.getElementById('submit-btn');
+  const ratingTexts = ['Ужасно', 'Плохо', 'Нормально', 'Хорошо', 'Отлично'];
+
+  // Создаем звезды
+  for (let i = 1; i <= 5; i++) {
+    const star = document.createElement('div');
+    star.className = 'text-5xl text-gray-300 cursor-pointer star';
+    star.dataset.value = i;
+    star.innerHTML = '★';
+    star.addEventListener('mouseover', hoverStar);
+    star.addEventListener('mouseout', mouseOutStar);
+    star.addEventListener('click', setRating);
+    starRating.appendChild(star);
+  }
+
+  let selectedRating = 0;
+
+  function hoverStar(e) {
+    if (selectedRating === 0) {
+      const hoverValue = parseInt(e.target.dataset.value);
+      const stars = document.querySelectorAll('.star');
+
+      stars.forEach(star => {
+        const starValue = parseInt(star.dataset.value);
+        star.style.color = starValue <= hoverValue ? '#f59e0b' : '#d1d5db';
+      });
+
+      ratingText.textContent = ratingTexts[hoverValue - 1];
+    }
+  }
+
+  function mouseOutStar() {
+    if (selectedRating === 0) {
+      const stars = document.querySelectorAll('.star');
+      stars.forEach(star => {
+        star.style.color = '#d1d5db';
+      });
+      ratingText.textContent = 'Нажмите для оценки';
+    }
+  }
+
+  function setRating(e) {
+    selectedRating = parseInt(e.target.dataset.value);
+    const stars = document.querySelectorAll('.star');
+
+    stars.forEach(star => {
+      const starValue = parseInt(star.dataset.value);
+      star.style.color = starValue <= selectedRating ? '#f59e0b' : '#d1d5db';
+    });
+
+    ratingText.innerHTML = `<strong>${ratingTexts[selectedRating - 1]}</strong>`;
+    ratingInput.value = selectedRating;
+    submitBtn.disabled = false;
+  }
+
+  const comment = document.getElementById('comment');
+  const charCount = document.getElementById('charCount');
+
+  comment.addEventListener('input', function() {
+    charCount.textContent = this.value.length;
+  });
+
+  const feedbackForm = document.getElementById('feedbackForm');
+  const thankYouMessage = document.getElementById('thankYouMessage');
+  const backButton = document.getElementById('backButton');
+
+  feedbackForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (selectedRating === 0) {
+      alert('Пожалуйста, выберите оценку');
+      return;
+    }
+
+    const formData = new FormData(this);
+    fetch(window.location.href, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.redirected) {
+        feedbackForm.classList.add('hidden');
+        backButton.classList.add('hidden');
+        thankYouMessage.classList.remove('hidden');
+
+        setTimeout(() => {
+          window.location.href = response.url;
+        }, 3000);
+      } else {
+        return response.text().then(text => {
+          console.error('Error response:', text);
+          alert('Произошла ошибка при отправке отзыва');
         });
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Произошла ошибка при отправке отзыва');
+    });
+  });
+});
 
-        // Отправка формы
-        const feedbackForm = document.getElementById('feedbackForm');
-        const thankYouMessage = document.getElementById('thankYouMessage');
-        
-        feedbackForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            feedbackForm.classList.add('hidden');
-            thankYouMessage.classList.remove('hidden');
-            
-            // Здесь была бы отправка данных на сервер
-            setTimeout(() => {
-                // window.location.href = '/';
-            }, 3000);
-        });
-    </script>
-
-    <style>
-        .star {
-            transition: color 0.2s ease;
-        }
-        textarea {
-            resize: none;
-        }
-    </style>
-</body>
-</html>
+function skipRating() {
+  if (confirm('Вы уверены, что хотите пропустить оценку?')) {
+    fetch(`/reviews/skip/{{ order.id }}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.redirect) {
+        window.location.href = data.redirect;
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Произошла ошибка');
+    });
+  }
+}
+</script>
+{% endblock %}
