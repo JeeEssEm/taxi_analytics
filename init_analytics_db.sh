@@ -1,7 +1,7 @@
 #!/bin/bash
 dataset=nyc-yellow-taxi-trip-data
 dataset_dir=$dataset
-table=nyc_yellow_taxi_trip
+table=nyc_yellow_taxi_trips
 
 echo "Downloading dataset $dataset..."
 
