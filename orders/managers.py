@@ -10,7 +10,7 @@ class OrderManager(Manager):
     def get_profile_summary(self, user_id: int):
         result = self.filter(
             client_id=user_id,
-            dropoff_datetime__isnull=False  # Только завершенные поездки
+            status="DONE"  # Только завершенные поездки
         ).aggregate(
             total_count=Count('id'),
             total_distance=Sum('trip_distance_km'),
@@ -23,8 +23,8 @@ class OrderManager(Manager):
         )
         return {
             'total_count': result['total_count'] or 0,
-            'total_distance': result['total_distance'] or 0.0,
-            'total_duration': (result['total_duration'] or timedelta()).total_seconds() / 60 / 60
+            'total_distance': round(result['total_distance'] or 0.0),
+            'total_duration': round((result['total_duration'] or timedelta()).total_seconds() / 60 / 60)
         }
 
     def get_amount_of_pending_orders(self) -> int:
@@ -34,18 +34,37 @@ class OrderManager(Manager):
             total_count=Count('id')
         )['total_count'] or 0
 
-    def get_active_order(self, user_id: int):
+    def _get_active_orders_qs(self):
         return (
             self
-            .filter(client_id=user_id)
             .filter(~Q(status="DONE"))
             .filter(~Q(status="CANCELLED"))
+        )
+
+    def get_active_order(self, user_id: int):
+        return (
+            self._get_active_orders_qs()
+            .filter(client_id=user_id)
+        )
+
+    def get_active_order_driver(self, user):
+        return (
+            self._get_active_orders_qs()
+            .filter(driver__user=user)
         )
 
     def get_completed_orders(self, user_id: int):
         return (
             self
             .filter(client_id=user_id)
+            .filter(Q(status="DONE") | Q(status="CANCELLED"))
+            .order_by('-created_at')
+        )
+
+    def get_completed_orders_by_driver(self, user_id: int):
+        return (
+            self
+            .filter(driver__user=user_id)
             .filter(Q(status="DONE") | Q(status="CANCELLED"))
             .order_by('-created_at')
         )

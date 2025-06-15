@@ -251,9 +251,9 @@ class OrdersHistoryView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        active_order = TaxiOrder.objects.get_active_order(self.request.user.id).first()
-        context['total_orders'] = self.get_queryset().count()
-        context['active_order'] = active_order
-        context['active_order_status'] = get_status_info(active_order.status)
+        active_order = TaxiOrder.objects.get_active_order(self.request.user).first()
+        if active_order:
+            context['active_order'] = active_order
+            context['active_order_status'] = get_status_info(active_order.status)
 
         return context

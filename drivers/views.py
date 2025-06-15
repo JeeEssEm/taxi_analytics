@@ -3,10 +3,11 @@ from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.views.generic import FormView, View, UpdateView, CreateView
+from django.views.generic import FormView, View, UpdateView, CreateView, ListView
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from orders.utils import get_status_info
 from orders.serializers import OrderSerializer
 import drivers.forms as driver_forms
 import users.models as users_models
@@ -58,7 +59,7 @@ class ChangeDriverActivityView(LoginRequiredMixin, View):
             request.user.taxi.save()
             return redirect(reverse_lazy('drivers:new_orders'))
         if request.user.taxi.status == drivers_models.TaxiDriver.StatusChoices.WORKING:
-           return HttpResponse(status=403, message='You cannot change activity while working')
+            return HttpResponse(status=403, message='You cannot change activity while working')
         request.user.taxi.status = drivers_models.TaxiDriver.StatusChoices.INACTIVE
         request.user.taxi.save()
         return redirect(reverse_lazy('drivers:new_orders'))
@@ -126,3 +127,20 @@ class OrdersListView(LoginRequiredMixin, View):
                 'refresh_interval': self.refresh_interval // 1000,
             }
         )
+
+
+class OrdersHistoryView(LoginRequiredMixin, ListView):
+    template_name = "drivers/history.html"
+    context_object_name = "orders"
+    paginate_by = 1
+
+    def get_queryset(self):
+        return order_models.TaxiOrder.objects.get_completed_orders_by_driver(self.request.user.id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        active_order = order_models.TaxiOrder.objects.get_active_order_driver(self.request.user.id).first()
+        if active_order:
+            context['active_order'] = active_order
+            context['active_order_status'] = get_status_info(active_order.status)
+        return context
