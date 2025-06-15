@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Мои поездки - Водитель{% endblock %}
+{% block title %}Мои поездки{% endblock %}
 
 {% block not_centered_content %}
 <div class="max-w-6xl mx-auto px-4 py-8">
@@ -78,6 +78,7 @@
     </div>
   </div>
   {% endif %}
+  {% include 'reviews/includes/pending_reviews_banner.html' %}
 
   <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-800">История поездок</h2>

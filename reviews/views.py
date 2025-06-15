@@ -1,11 +1,12 @@
 from logging import getLogger
 
+from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views import View
 
-from drivers.mixins import UserIsDriverOfOrderMixin
 from reviews.models import TaxiReview
 from orders.models import TaxiOrder
 
@@ -33,12 +34,18 @@ class CreateReviewView(LoginRequiredMixin, View):
                 return HttpResponseForbidden()
 
         target_person = order.client
+        user_role = "driver"
+        back_url = reverse_lazy("drivers:history")
         if request.user == order.client:
             target_person = order.driver.user
+            user_role = "client"
+            back_url = reverse_lazy("orders:history")
 
         return render(request, self.template_name, {
             "order": order,
             "target_person": target_person,
+            "user_role": user_role,
+            "back_url": back_url,
         })
 
     def post(self, request, pk):
@@ -62,18 +69,52 @@ class CreateReviewView(LoginRequiredMixin, View):
             if order.client == request.user:
                 review.client_mark = rating
                 review.client_review = data["comment"]
+                redirected = reverse_lazy("reviews:client_pending_reviews")
             else:
                 review.driver_mark = rating
                 review.driver_review = data["comment"]
+                redirected = reverse_lazy("reviews:driver_pending_reviews")
             review.save()
 
-            return JsonResponse({"success": True})
+            return redirect(redirected)
         except Exception as exc:
             LOGGER.exception(f"Exception occurred during creating review: {exc}")
             return HttpResponseBadRequest()
 
 
-class DriverPendingReviewsView(LoginRequiredMixin, UserIsDriverOfOrderMixin, View):
+class DriverPendingReviewsView(LoginRequiredMixin, ListView):
     template_name = 'reviews/pending_reviews.html'
     context_object_name = 'pending_orders'
     paginate_by = 10
+
+    def get_queryset(self):
+        return TaxiOrder.objects.get_unrated_orders_by_driver(self.request.user.taxi)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'user_role': 'driver',
+            'page_title': 'Оценить клиентов',
+            'empty_title': 'Все заказы оценены!',
+            'empty_description': 'У вас нет заказов, ожидающих оценки',
+            'back_url': reverse_lazy("drivers:history"),
+            'back_text': 'К истории заказов'
+        })
+        return context
+
+
+class ClientPendingReviewsView(DriverPendingReviewsView):
+    def get_queryset(self):
+        return TaxiOrder.objects.get_unrated_orders_by_client(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'user_role': 'client',
+            'page_title': 'Оценить клиентов',
+            'empty_title': 'Все заказы оценены!',
+            'empty_description': 'У вас нет заказов, ожидающих оценки',
+            'back_url': reverse_lazy("orders:history"),
+            'back_text': 'К истории заказов'
+        })
+        return context

@@ -123,9 +123,15 @@ class OrdersHistoryView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         active_order = order_models.TaxiOrder.objects.get_active_order_driver(self.request.user.id).first()
+        unrated_orders_amount = order_models.TaxiOrder.objects.get_unrated_orders_by_driver(self.request.user.taxi).count()
+
         if active_order:
             context['active_order'] = active_order
             context['active_order_status'] = get_status_info(active_order.status)
+        if unrated_orders_amount > 0:
+            context['show_banner'] = True
+            context['user_role'] = 'driver'
+            context['pending_count'] = unrated_orders_amount
         return context
 
 

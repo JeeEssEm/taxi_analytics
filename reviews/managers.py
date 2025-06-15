@@ -2,9 +2,9 @@ from django.db.models import Manager, Avg
 
 
 class ReviewManager(Manager):
-    def get_user_rating(self, user_id: int):
+    def get_user_rating(self, user):
         return (self
-        .filter(client_id=user_id)
+        .filter(order__client_id=user)
         .aggregate(
             rating=Avg('driver_mark')
         ))['rating'] or 0

@@ -68,3 +68,28 @@ class OrderManager(Manager):
             .filter(Q(status="DONE") | Q(status="CANCELLED"))
             .order_by('-created_at')
         )
+
+    def _get_unrated_orders(self):
+        return (
+            self
+            .filter(
+                status__in=["DONE", "CANCELLED"]
+            )
+            .select_related(
+                "driver__user", "car", "client"
+            )
+            .prefetch_related("review")
+            .order_by("-created_at")
+        )
+
+    def get_unrated_orders_by_driver(self, driver):
+        return self._get_unrated_orders().filter(
+            driver=driver,
+            review__driver_mark=None
+        )
+
+    def get_unrated_orders_by_client(self, client):
+        return self._get_unrated_orders().filter(
+            client=client,
+            review__client_mark=None
+        )
