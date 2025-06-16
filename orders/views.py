@@ -43,16 +43,12 @@ class CalculateOrderPriceView(View):
             try:
                 summary = get_order_summary(pickup_coords, dropoff_coords, passengers)
 
-                order_data = {
+                order_signature = create_order_signature({
                     'pickup_coords': pickup_coords,
                     'dropoff_coords': dropoff_coords,
                     'passengers': passengers,
-                    'price': float(summary.get('price', 0)),
-                    'distance': summary.get('distance', 0),
-                    'duration': summary.get('duration', 0)
-                }
-
-                order_signature = create_order_signature(order_data)
+                    'price': float(summary.get('price', 0))
+                })
 
                 response_data = {
                     'success': True,
@@ -115,7 +111,7 @@ class CreateOrderView(LoginRequiredMixin, View):
                 {
                     'pickup_coords': data.get('pickup_coords'),
                     'dropoff_coords': data.get('dropoff_coords'),
-                    'passengers': int(data.get('passengers_count', 1)),
+                    'passengers': int(data.get('passenger_count', 1)),
                     'price': float(data.get('order_price', 0)),
                 }
             )
