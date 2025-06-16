@@ -12,3 +12,10 @@ docker-compose run --rm web python manage.py migrate
 
 echo "Запуск приложения..."
 docker-compose up web
+
+echo "Запуск аналитической базы данных..."
+docker-compose up analytics_db
+docker exec -it analytics_db “bash /scripts/init_analytics_db.sh”
+
+echo "Запуск Grafana..."
+docker-compose up grafana
