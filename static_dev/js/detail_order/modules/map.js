@@ -108,7 +108,7 @@ window.OrderMap = (function() {
       routeObject = route;
       map.geoObjects.add(route);
 
-      map.setBounds(route.getBounds(), {
+      map.setBounds(route.getPaths().getBounds(), {
         checkZoomRange: true,
         zoomMargin: 50
       });

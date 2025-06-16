@@ -197,7 +197,7 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
                 self.template_name,
                 context=context
             )
-        if order.driver.user == request.user:
+        if order.driver and order.driver.user == request.user:
             return redirect(reverse_lazy('drivers:order_detail', kwargs={'pk': order.id}))
         return HttpResponse(status=404)
 
