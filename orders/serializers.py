@@ -9,6 +9,9 @@ from orders.models import TaxiOrder
 class OrderSerializer:
     @staticmethod
     def get_user_image(user, request):
+        """
+        :returns: URI аватара пользователя
+        """
         if user.image:
             thumb = get_thumbnail(user.image, '40x40', crop='center')
             return request.build_absolute_uri(thumb.url)
@@ -16,6 +19,9 @@ class OrderSerializer:
 
     @staticmethod
     def get_orders(request, orders: Iterable[TaxiOrder]):
+        """
+        :returns: сериализованный вид объекта модели TaxiOrder
+        """
         return [
             {
                 'id': order.id,

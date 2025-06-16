@@ -4,6 +4,9 @@ from django.db.models import Count, Sum, ExpressionWrapper, DurationField, F, Ma
 
 
 class OrderManager(Manager):
+    """
+    Вспомогательный класс для запросов к базе данных
+    """
     def get_profile_summary(self, user_id: int):
         result = self.filter(
             client_id=user_id,

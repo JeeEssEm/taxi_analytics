@@ -13,6 +13,9 @@ LOGGER = getLogger(__name__)
 
 
 def get_route_summary(pickup_coords: str, dropoff_coords: str):
+    """
+    :returns: расчетные дистанцию поездки (в км) и продолжительность (в мин)
+    """
     pickup_lat, pickup_lng = map(float, pickup_coords.split(','))
     dropoff_lat, dropoff_lng = map(float, dropoff_coords.split(','))
 
@@ -88,6 +91,9 @@ def _calculate_real_price(distance: float, clear_time: float, orders: int, free_
 
 
 def get_order_summary(pickup_coords: str, dropoff_coords: str, passengers: int):
+    """
+    :returns: расчетные дистанцию (в км), продолжительность (в мин) и цену (в рублях)
+    """
     orders = TaxiOrder.objects.get_amount_of_pending_orders()
     free_cars = TaxiDriver.objects.get_amount_of_free_drivers()
     route_summary = get_route_summary(
@@ -108,6 +114,10 @@ def get_order_summary(pickup_coords: str, dropoff_coords: str, passengers: int):
 
 
 def get_address_coords(coords_string: str):
+    """
+    :param coords_string: строка формата "<широта>,<долгота>"
+    :returns: адрес соответствующий данной координате
+    """
     try:
         lat, lng = map(float, coords_string.split(','))
 
@@ -138,6 +148,9 @@ def get_address_coords(coords_string: str):
 
 
 def create_order_signature(order_data):
+    """
+    :returns: уникальная подпись заказа
+    """
     signature_string = f"{order_data['pickup_coords']}{order_data['dropoff_coords']}{order_data['passengers']}{order_data['price']}{settings.SECRET_KEY}"
     return hashlib.sha256(signature_string.encode()).hexdigest()[:16]
 

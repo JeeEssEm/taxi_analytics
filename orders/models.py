@@ -8,6 +8,9 @@ from users.models import TaxiUser
 
 
 class TaxiOrder(models.Model):
+    """
+    Модель базы данных репрезентирующая заказ
+    """
     objects = OrderManager()
 
     driver = models.ForeignKey(TaxiDriver, null=True, on_delete=models.CASCADE)

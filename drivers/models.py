@@ -9,14 +9,23 @@ from cars.models import TaxiCar
 
 
 def upload_licenses(instance, filename):
+    """
+    :returns: Путь к директории с водительскими лицензиями   
+    """
     return TaxiDriver.get_file_path(instance, filename, "driver_licenses")
 
 
 def upload_rc(instance, filename):
+    """
+    :returns: Путь к директории с регистрационными сертификатами
+    """
     return TaxiDriver.get_file_path(instance, filename, "registration_certificates")
 
 
 class TaxiDriver(models.Model):
+    """
+    Модель таблицы базы данных, репрезентирующая водителя сервиса
+    """
     objects = DriversManager()
 
     car = models.OneToOneField(TaxiCar, null=False, on_delete=models.CASCADE)

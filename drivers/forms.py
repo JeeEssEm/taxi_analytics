@@ -5,6 +5,9 @@ import cars.models as cars_models
 
 
 class DriverForm(ModelForm):
+    """
+    Класс репрезентирующий форму водителя
+    """
     class Meta:
         model = driver_models.TaxiDriver
         fields = (
@@ -14,6 +17,9 @@ class DriverForm(ModelForm):
 
 
 class CarForm(ModelForm):
+    """
+    Класс репрезентирующий форму автомобиля
+    """
     class Meta:
         model = cars_models.TaxiCar
         fields = (

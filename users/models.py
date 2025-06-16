@@ -6,6 +6,9 @@ from cars.models import TaxiCar
 
 
 class TaxiUser(AbstractUser):
+    """
+    Модель базы данных, репрезентирующая абстрактного пользователя
+    """
     email = models.EmailField(unique=True, blank=False)
 
     first_name = models.CharField(max_length=150, blank=False)

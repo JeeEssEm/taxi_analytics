@@ -4,6 +4,9 @@ import orders.models as orders_models
 
 
 class CreateOrderForm(ModelForm):
+    """
+    Класс репрезентирующий форму заказа
+    """
     class Meta:
         model = orders_models.TaxiOrder
         fields = (
