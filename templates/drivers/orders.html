@@ -222,6 +222,7 @@
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
           </svg>
           Доступные заказы
+          <span id="orders-count" class="ml-2 text-sm text-gray-500"></span>
         </h1>
 
         <a href="{% url 'drivers:history' %}"
@@ -234,11 +235,12 @@
           История
         </a>
       </div>
+
       <div class="flex items-center bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
-        <span class="flex h-3 w-3 mr-2">
-          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-purple-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
-        </span>
+            <span class="flex h-3 w-3 mr-2">
+                <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-purple-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
+            </span>
         Обновление каждые {{ refresh_interval }} секунд
       </div>
     </div>
@@ -258,9 +260,43 @@
           <p class="text-gray-600">Загружаем список заказов...</p>
         </div>
       </div>
+
+      <!-- Кнопка "Загрузить ещё" -->
+      <div id="load-more-container" class="hidden mt-6 text-center">
+        <button id="load-more-btn"
+                class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center mx-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+          Загрузить ещё заказы
+        </button>
+      </div>
+
+      <!-- Индикатор загрузки -->
+      <div id="loading-indicator" class="hidden mt-6 text-center">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600 mb-2"></div>
+        <p class="text-gray-600">Загружаем ещё заказы...</p>
+      </div>
+
+      <!-- Индикатор окончания списка -->
+      <div id="end-of-list" class="hidden mt-6 text-center py-8">
+        <div class="inline-block bg-gray-100 rounded-full p-4 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <p class="text-gray-500 font-medium">Все доступные заказы загружены</p>
+        <p class="text-gray-400 text-sm">Новые заказы будут появляться автоматически</p>
+      </div>
     {% endif %}
+
+    <!-- Существующие шаблоны -->
     <template id="order-template">
-      <div class="order-card bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-purple-500 transition-all hover:shadow-lg">
+      <div class="order-card bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-purple-500 transition-all hover:shadow-lg"
+           data-order-id="">
         <div class="p-5">
           <div class="flex justify-between items-start">
             <div>
@@ -292,9 +328,7 @@
 
           <div class="flex justify-between items-center mt-4">
             <div class="flex items-center">
-              <div class="image-rating-block">
-
-              </div>
+              <div class="image-rating-block"></div>
               <div class="ml-3">
                 <div class="text-sm font-medium passenger-name"></div>
                 <div class="flex items-center">
@@ -331,33 +365,95 @@
       </div>
     </template>
   </div>
+{% endblock %}
 
+{% block scripts %}
   <script>
       document.addEventListener('DOMContentLoaded', function () {
-
           const ordersContainer = document.getElementById('orders-container');
           const orderTemplate = document.getElementById('order-template').content;
           const noOrdersTemplate = document.getElementById('no-orders-template').content;
+          const loadMoreContainer = document.getElementById('load-more-container');
+          const loadMoreBtn = document.getElementById('load-more-btn');
+          const loadingIndicator = document.getElementById('loading-indicator');
+          const ordersCount = document.getElementById('orders-count');
 
-          function fetchOrders() {
-              fetch(window.location.href, {
+          let currentPage = 1;
+          let isLoading = false;
+          let hasMorePages = true;
+          let loadedOrderIds = new Set();
+          let refreshTimer = null;
+          let maxPageLoaded = 1;
+
+          function fetchOrders(isRefresh = false, loadMore = false) {
+              if (isLoading) return;
+              isLoading = true;
+
+              if (loadMore) {
+                  loadingIndicator.classList.remove('hidden');
+                  loadMoreContainer.classList.add('hidden');
+              }
+
+              let pageToLoad = currentPage;
+
+              if (isRefresh) {
+                  pageToLoad = 1;
+              }
+
+              const url = new URL(window.location.href);
+              url.searchParams.set('page', pageToLoad);
+              if (loadMore) {
+                  url.searchParams.set('load_more', 'true');
+              }
+
+              fetch(url, {
                   headers: {
                       'X-Requested-With': 'XMLHttpRequest'
                   }
               })
                   .then(response => response.json())
                   .then(data => {
-                      renderOrders(data.orders);
-                      setTimeout(fetchOrders, data.refresh_interval);
+                      const orders = data.orders || [];
+
+                      if (isRefresh) {
+                          addNewOrdersFromRefresh(orders);
+                      } else if (loadMore) {
+                          appendOrders(orders);
+                          hasMorePages = data.has_next || false;
+                          if (orders.length > 0) {
+                              maxPageLoaded = currentPage;
+                          }
+                      } else {
+                          renderOrders(orders);
+                          hasMorePages = data.has_next || false;
+                          maxPageLoaded = 1;
+                      }
+
+                      if (data.total_count !== undefined) {
+                          ordersCount.textContent = `(${data.total_count})`;
+                      }
+
+                      updateLoadMoreButton();
+
+                      if (!loadMore && data.refresh_interval) {
+                          scheduleRefresh(data.refresh_interval);
+                      }
                   })
                   .catch(error => {
                       console.error('Ошибка при загрузке заказов:', error);
-                      setTimeout(fetchOrders, 5000);
+                      setTimeout(() => fetchOrders(isRefresh, loadMore), 5000);
+                  })
+                  .finally(() => {
+                      isLoading = false;
+                      loadingIndicator.classList.add('hidden');
                   });
           }
 
           function renderOrders(orders) {
               ordersContainer.innerHTML = '';
+              loadedOrderIds.clear();
+              currentPage = 1;
+              maxPageLoaded = 1;
 
               if (orders.length === 0) {
                   const clone = document.importNode(noOrdersTemplate, true);
@@ -366,67 +462,111 @@
               }
 
               orders.forEach(order => {
-                  const clone = document.importNode(orderTemplate, true);
-
-                  clone.querySelector('.order-id').textContent = order.id;
-                  clone.querySelector('.start-address').textContent = order.start_address;
-                  clone.querySelector('.end-address').textContent = order.end_address;
-                  clone.querySelector('.price').textContent = order.price + ' ₽';
-                  clone.querySelector('.distance').textContent = order.distance + ' км';
-                  clone.querySelector('.created-at').textContent = order.created_at;
-                  clone.querySelector('.passenger-name').textContent = order.passenger.name;
-                  clone.querySelector('.passenger-rating').textContent = order.passenger.rating.toFixed(1);
-                  clone.querySelector('.take-order-form').action = `/drivers/orders/${order.id}/take/`;
-                  clone.querySelector('.image-rating-block')
-                  const imageRatingBlock = clone.querySelector('.image-rating-block');
-
-                  if (order.passenger.image) {
-                      const img = document.createElement('img');
-                      img.src = order.passenger.image;
-                      img.alt = order.passenger.name;
-                      img.className = 'h-8 w-8 rounded-full object-cover mr-2';
-
-                      imageRatingBlock.insertBefore(img, imageRatingBlock.firstElementChild);
-                  } else {
-                      const defaultAvatar = document.createElement('div');
-                      defaultAvatar.innerHTML = `<div class="bg-gray-200 border-2 border-dashed rounded-xl w-10 h-10"></div>`;
-                      imageRatingBlock.insertBefore(defaultAvatar.firstElementChild, imageRatingBlock.firstElementChild);
-                  }
-                  const btn = clone.querySelector('.take-order-btn');
-                  btn.addEventListener('click', function () {
-                      takeOrder(order.id);
-                  });
-
-                  ordersContainer.appendChild(clone);
+                  createOrderElement(order);
+                  loadedOrderIds.add(order.id);
               });
           }
 
-          function takeOrder(orderId) {
-              fetch(`/orders/${orderId}/take/`, {
-                  method: 'POST',
-                  headers: {
-                      'X-CSRFToken': '{{ csrf_token }}',
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({})
-              })
-                  .then(response => response.json())
-                  .then(data => {
-                      if (data.success) {
-                          showNotification(`Заказ #${orderId} успешно взят!`);
-                          fetchOrders();
+          function addNewOrdersFromRefresh(newOrders) {
+              const noOrdersElement = ordersContainer.querySelector('.text-center.py-12.bg-gray-50');
+              if (noOrdersElement) {
+                  noOrdersElement.remove();
+              }
+
+              newOrders.forEach(order => {
+                  if (!loadedOrderIds.has(order.id)) {
+                      const orderElement = createOrderElement(order, true);
+                      if (ordersContainer.firstChild) {
+                          ordersContainer.insertBefore(orderElement, ordersContainer.firstChild);
                       } else {
-                          showNotification(`Ошибка: ${data.error}`, 'error');
+                          ordersContainer.appendChild(orderElement);
                       }
-                  })
-                  .catch(error => {
-                      showNotification('Ошибка сети. Попробуйте снова.', 'error');
-                  });
+                      loadedOrderIds.add(order.id);
+                  }
+              });
+
+              if (loadedOrderIds.size === 0) {
+                  const clone = document.importNode(noOrdersTemplate, true);
+                  ordersContainer.appendChild(clone);
+              }
           }
 
-          function showNotification(message, type = 'success') {
-              alert(`${type === 'success' ? '✓' : '⚠'} ${message}`);
+          function appendOrders(orders) {
+              const noOrdersElement = ordersContainer.querySelector('.text-center.py-12.bg-gray-50');
+              if (noOrdersElement) {
+                  noOrdersElement.remove();
+              }
+
+              orders.forEach(order => {
+                  if (!loadedOrderIds.has(order.id)) {
+                      createOrderElement(order);
+                      loadedOrderIds.add(order.id);
+                  }
+              });
           }
+
+          function createOrderElement(order, returnElement = false) {
+              const clone = document.importNode(orderTemplate, true);
+              const orderCard = clone.querySelector('.order-card');
+
+              clone.querySelector('.order-id').textContent = order.id;
+              clone.querySelector('.start-address').textContent = order.start_address;
+              clone.querySelector('.end-address').textContent = order.end_address;
+              clone.querySelector('.price').textContent = order.price + ' ₽';
+              clone.querySelector('.distance').textContent = order.distance + ' км';
+              clone.querySelector('.created-at').textContent = order.created_at;
+              clone.querySelector('.passenger-name').textContent = order.passenger.name;
+              clone.querySelector('.passenger-rating').textContent = order.passenger.rating.toFixed(1);
+              clone.querySelector('.take-order-form').action = `/drivers/orders/${order.id}/take/`;
+
+              const imageRatingBlock = clone.querySelector('.image-rating-block');
+              if (order.passenger.image) {
+                  const img = document.createElement('img');
+                  img.src = order.passenger.image;
+                  img.alt = order.passenger.name;
+                  img.className = 'h-8 w-8 rounded-full object-cover mr-2';
+                  imageRatingBlock.appendChild(img);
+              } else {
+                  const defaultAvatar = document.createElement('div');
+                  defaultAvatar.className = 'bg-gray-200 border-2 border-dashed rounded-full w-8 h-8 mr-2';
+                  imageRatingBlock.appendChild(defaultAvatar);
+              }
+
+              if (returnElement) {
+                  return orderCard;
+              } else {
+                  ordersContainer.appendChild(clone);
+              }
+          }
+
+          function updateLoadMoreButton() {
+              if (loadedOrderIds.size > 0 && hasMorePages) {
+                  loadMoreContainer.classList.remove('hidden');
+              } else {
+                  loadMoreContainer.classList.add('hidden');
+              }
+          }
+
+          function scheduleRefresh(interval) {
+              if (refreshTimer) {
+                  clearTimeout(refreshTimer);
+              }
+
+              refreshTimer = setTimeout(() => {
+                  fetchOrders(true);
+              }, interval);
+          }
+
+          loadMoreBtn.addEventListener('click', function () {
+              currentPage++;
+              fetchOrders(false, true);
+          });
+
+          window.addEventListener('beforeunload', () => {
+              if (refreshTimer) {
+                  clearTimeout(refreshTimer);
+              }
+          });
 
           {% if user.taxi.status != user.taxi.StatusChoices.INACTIVE %}
               fetchOrders();

@@ -28,8 +28,8 @@
   <div class="container mx-auto px-4 py-8 max-w-2xl">
 
     <header class="mb-8 text-center">
-      <div class="w-20 h-20 bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i class="fas fa-star text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 text-2xl"></i>
+      <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-star text-purple-600 text-2xl"></i>
       </div>
       <h1 class="text-3xl font-bold text-gray-800 mb-2">
         {% if user_role == 'driver' %}Оценить клиента{% else %}Оценить водителя{% endif %}
@@ -42,7 +42,7 @@
         {% thumbnail target_person.image "16x16" crop="center" as img %}
           <img src="{{ img.url }}" alt="Фото" class="w-16 h-16 rounded-full object-cover">
         {% empty %}
-          <div class="w-16 h-16 bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+          <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
             {{ target_person.first_name.0|upper }}{{ target_person.last_name.0|upper }}
           </div>
         {% endthumbnail %}
@@ -59,7 +59,7 @@
           <p class="text-sm text-gray-500">{{ order.pickup_verbose }} → {{ order.dropoff_verbose }}</p>
         </div>
         <div class="text-right">
-          <p class="text-2xl font-bold text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600">{{ order.total }}
+          <p class="text-2xl font-bold text-purple-600">{{ order.total }}
             ₽</p>
           <p class="text-sm text-gray-500">
             {% if order.status == 'DONE' %}Завершена{% else %}Отменена{% endif %}
@@ -86,7 +86,7 @@
           Ваш отзыв <span class="text-gray-500">(необязательно)</span>
         </label>
         <textarea id="comment" name="comment" rows="4" maxlength="5000"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-500 focus:border-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-500 transition"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                   placeholder="{% if user_role == 'driver' %}Расскажите о клиенте...{% else %}Что особенно понравилось или можно улучшить?{% endif %}"></textarea>
         <p class="text-right text-xs text-gray-500 mt-1">
           <span id="charCount">0</span>/5000
@@ -95,7 +95,7 @@
 
       <div class="flex space-x-4">
         <button type="submit" id="submit-btn" disabled
-                class="flex-1 py-3 bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 text-white rounded-lg hover:bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center justify-center space-x-2">
+                class="flex-1 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center justify-center space-x-2">
           <i class="fas fa-paper-plane"></i>
           <span>Отправить отзыв</span>
         </button>

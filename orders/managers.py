@@ -1,6 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from django.db.models import Count, Sum, ExpressionWrapper, DurationField, F, Manager, Q
+from django.db.models import (
+    Count, Sum, ExpressionWrapper, DurationField, F, Manager, Q, Avg, When, FloatField,
+    Case, Value, Subquery, OuterRef
+)
 
 
 class OrderManager(Manager):
@@ -24,7 +27,7 @@ class OrderManager(Manager):
         return {
             'total_count': result['total_count'] or 0,
             'total_distance': round(result['total_distance'] or 0.0),
-            'total_duration': round((result['total_duration'] or timedelta()).total_seconds() / 60 / 60)
+            'total_duration': round((result['total_duration'] or timedelta()).total_seconds() / 60)
         }
 
     def get_amount_of_pending_orders(self) -> int:
@@ -91,5 +94,37 @@ class OrderManager(Manager):
     def get_unrated_orders_by_client(self, client):
         return self._get_unrated_orders().filter(
             client=client,
-            review__client_mark=None
+            review__client_mark=None,
+        )
+
+    def get_available_orders(self):
+        from reviews.models import TaxiReview
+
+        rating_subquery = (
+            TaxiReview.objects
+            .filter(
+                order__client=OuterRef('client'),
+                driver_mark__isnull=False
+            )
+            .values('order__client')
+            .annotate(avg_rating=Avg('driver_mark'))
+            .values('avg_rating')
+        )
+
+        return (
+            self
+            .filter(
+                status='PENDING',
+                driver__isnull=True,
+                created_at__gte=datetime.now() - timedelta(hours=1)
+            )
+            .select_related('client')
+            .annotate(
+                client_rating=Subquery(rating_subquery, output_field=FloatField())
+            )
+            .order_by(
+                '-client_rating',
+                'created_at',
+                'trip_distance_km'
+            )
         )

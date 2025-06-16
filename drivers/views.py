@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import json
 
+from django.core.paginator import Paginator
 from django.contrib.auth.views import LoginView
 from django.http.response import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
@@ -80,7 +81,8 @@ class UpdateDriverInformationView(LoginRequiredMixin, DriverInformationMixin, Up
 class OrdersListView(LoginRequiredMixin, View):
     template_name = "drivers/orders.html"
     context_object_name = "orders"
-    refresh_interval = 15 * 1000  # 15 секунд
+    refresh_interval = 2 * 1000  # 15 секунд
+    paginate_by = 1
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not request.user.taxi:
@@ -88,25 +90,41 @@ class OrdersListView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return order_models.TaxiOrder.objects.all()  # TODO: добавить сортировку по расстоянию и фильтрацию по статусу
+        return order_models.TaxiOrder.objects.get_available_orders()
 
     def get(self, request, *args, **kwargs):
+        page_number = request.GET.get('page', 1)
+        load_more = request.GET.get('load_more', False)
+
+        queryset = self.get_queryset()
+        paginator = Paginator(queryset, self.paginate_by)
+        page_obj = paginator.get_page(page_number)
+
         # если ajax, то возвращаем json
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            orders: list[order_models.TaxiOrder] = self.get_queryset()
-            return JsonResponse(
-                {
-                    'orders': OrderSerializer.get_orders(request, orders),
-                    'refresh_interval': self.refresh_interval,
-                }
-            )
-        context = {
-                'refresh_interval': self.refresh_interval // 1000,
+            orders = list(page_obj.object_list)
+            response_data = {
+                'orders': OrderSerializer.get_orders(request, orders),
+                'refresh_interval': self.refresh_interval,
+                'has_next': page_obj.has_next(),
+                'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+                'current_page': page_obj.number,
+                'load_more': bool(load_more)
             }
+            if not load_more:
+                response_data['total_count'] = paginator.count
+
+            return JsonResponse(response_data)
+        context = {
+            'refresh_interval': self.refresh_interval // 1000,
+            'page_obj': page_obj,
+            'paginator': paginator,
+        }
         active_order = order_models.TaxiOrder.objects.get_active_order_driver(self.request.user.id).first()
         if active_order:
             context['active_order'] = active_order
             context['active_order_status'] = get_status_info(active_order.status)
+
         return render(
             request, self.template_name, context
         )
