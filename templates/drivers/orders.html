@@ -292,7 +292,9 @@
 
           <div class="flex justify-between items-center mt-4">
             <div class="flex items-center">
-              <div class="bg-gray-200 border-2 border-dashed rounded-xl w-10 h-10"></div>
+              <div class="image-rating-block">
+
+              </div>
               <div class="ml-3">
                 <div class="text-sm font-medium passenger-name"></div>
                 <div class="flex items-center">
@@ -375,7 +377,21 @@
                   clone.querySelector('.passenger-name').textContent = order.passenger.name;
                   clone.querySelector('.passenger-rating').textContent = order.passenger.rating.toFixed(1);
                   clone.querySelector('.take-order-form').action = `/drivers/orders/${order.id}/take/`;
+                  clone.querySelector('.image-rating-block')
+                  const imageRatingBlock = clone.querySelector('.image-rating-block');
 
+                  if (order.passenger.image) {
+                      const img = document.createElement('img');
+                      img.src = order.passenger.image;
+                      img.alt = order.passenger.name;
+                      img.className = 'h-8 w-8 rounded-full object-cover mr-2';
+
+                      imageRatingBlock.insertBefore(img, imageRatingBlock.firstElementChild);
+                  } else {
+                      const defaultAvatar = document.createElement('div');
+                      defaultAvatar.innerHTML = `<div class="bg-gray-200 border-2 border-dashed rounded-xl w-10 h-10"></div>`;
+                      imageRatingBlock.insertBefore(defaultAvatar.firstElementChild, imageRatingBlock.firstElementChild);
+                  }
                   const btn = clone.querySelector('.take-order-btn');
                   btn.addEventListener('click', function () {
                       takeOrder(order.id);
