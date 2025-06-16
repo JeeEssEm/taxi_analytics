@@ -81,8 +81,8 @@ class UpdateDriverInformationView(LoginRequiredMixin, DriverInformationMixin, Up
 class OrdersListView(LoginRequiredMixin, View):
     template_name = "drivers/orders.html"
     context_object_name = "orders"
-    refresh_interval = 2 * 1000  # 15 секунд
-    paginate_by = 1
+    refresh_interval = 15 * 1000  # 15 секунд
+    paginate_by = 10
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not request.user.taxi:
@@ -133,7 +133,7 @@ class OrdersListView(LoginRequiredMixin, View):
 class OrdersHistoryView(LoginRequiredMixin, ListView):
     template_name = "drivers/history.html"
     context_object_name = "orders"
-    paginate_by = 5
+    paginate_by = 10
 
     def get_queryset(self):
         return order_models.TaxiOrder.objects.get_completed_orders_by_driver(self.request.user.id)

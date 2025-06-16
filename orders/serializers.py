@@ -30,6 +30,7 @@ class OrderSerializer:
                 'price': order.total,
                 'distance': order.trip_distance_km,
                 'created_at': order.created_at.strftime("%H:%M %d.%m.%Y"),
+                'comment': order.comment,
                 'passenger': {
                     'name': order.client.get_full_name(),
                     'rating': TaxiReview.objects.get_user_rating(order.client.id),

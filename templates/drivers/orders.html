@@ -351,6 +351,9 @@
               </button>
             </form>
           </div>
+          <div class="comment text-sm text-gray-600 mt-4">
+
+          </div>
         </div>
       </div>
     </template>
@@ -517,6 +520,7 @@
               clone.querySelector('.created-at').textContent = order.created_at;
               clone.querySelector('.passenger-name').textContent = order.passenger.name;
               clone.querySelector('.passenger-rating').textContent = order.passenger.rating.toFixed(1);
+              clone.querySelector('.comment').textContent = order.comment;
               clone.querySelector('.take-order-form').action = `/drivers/orders/${order.id}/take/`;
 
               const imageRatingBlock = clone.querySelector('.image-rating-block');
