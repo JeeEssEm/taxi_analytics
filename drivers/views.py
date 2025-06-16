@@ -83,7 +83,7 @@ class OrdersListView(LoginRequiredMixin, View):
     refresh_interval = 15 * 1000  # 15 секунд
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.taxi:
+        if request.user.is_authenticated and not request.user.taxi:
             return redirect(reverse_lazy("drivers:become"))
         return super().dispatch(request, *args, **kwargs)
 
@@ -106,6 +106,7 @@ class OrdersListView(LoginRequiredMixin, View):
         active_order = order_models.TaxiOrder.objects.get_active_order_driver(self.request.user.id).first()
         if active_order:
             context['active_order'] = active_order
+            context['active_order_status'] = get_status_info(active_order.status)
         return render(
             request, self.template_name, context
         )
