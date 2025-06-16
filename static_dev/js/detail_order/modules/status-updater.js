@@ -5,6 +5,7 @@ window.StatusUpdater = (function() {
   let updateInterval = null;
   let lastKnownStatus = null;
   let lastKnownDriverState = null;
+  let lastDriverData = null; // Сохраняем последние данные водителя
 
   const statusBadge = document.getElementById('status-badge');
   const statusIcon = document.getElementById('status-icon');
@@ -19,6 +20,7 @@ window.StatusUpdater = (function() {
       orderId: options.orderId,
       statusUrl: options.statusUrl,
       updateInterval: options.updateInterval || 5000,
+      reviewUrl: options.reviewUrl,
       ...options
     };
 
@@ -59,21 +61,24 @@ window.StatusUpdater = (function() {
 
       lastKnownStatus = data.status;
       lastKnownDriverState = data.has_driver;
+      if (data.driver) {
+        lastDriverData = data.driver;
+      }
 
       console.log('StatusUpdater: Initial sync completed');
+
+      checkForCompletedOrder(data);
     })
     .catch(error => {
       console.error('StatusUpdater: Error during initial sync:', error);
     });
   }
 
-
   function forceUpdateDisplay(data) {
     console.log('StatusUpdater: Force updating display with data:', data);
 
     updateStatusDisplay(data);
     updateDriverDisplay(data);
-
   }
 
   function startUpdates() {
@@ -95,7 +100,6 @@ window.StatusUpdater = (function() {
   function setupEventListeners() {
     window.addEventListener('beforeunload', stopUpdates);
   }
-
 
   function updateStatus() {
     console.log('StatusUpdater: Requesting periodic status update...');
@@ -119,17 +123,39 @@ window.StatusUpdater = (function() {
       const statusChanged = data.status !== lastKnownStatus;
       const driverChanged = data.has_driver !== lastKnownDriverState;
 
+      // Проверяем, изменились ли данные водителя
+      const driverDataChanged = JSON.stringify(data.driver) !== JSON.stringify(lastDriverData);
+
       console.log('StatusUpdater: Status changed:', statusChanged, `(${lastKnownStatus} -> ${data.status})`);
       console.log('StatusUpdater: Driver changed:', driverChanged, `(${lastKnownDriverState} -> ${data.has_driver})`);
+      console.log('StatusUpdater: Driver data changed:', driverDataChanged);
 
-      if (statusChanged || driverChanged) {
-        console.log('StatusUpdater: Processing changes...');
+      if (statusChanged) {
         handleStatusChange(data);
-        lastKnownStatus = data.status;
-        lastKnownDriverState = data.has_driver;
-      } else {
-        console.log('StatusUpdater: No changes detected');
       }
+
+      // Обновляем отображение водителя при любых изменениях
+      if (driverChanged || driverDataChanged) {
+        updateDriverDisplay(data);
+
+        // Показываем уведомление только при назначении нового водителя
+        if (driverChanged && data.has_driver && data.driver) {
+          if (window.NotificationManager) {
+            window.NotificationManager.showSuccess(`Водитель назначен: ${data.driver.name}`);
+          }
+        }
+      }
+
+      // Принудительно проверяем отображение водителя
+      verifyDriverDisplay(data);
+
+      lastKnownStatus = data.status;
+      lastKnownDriverState = data.has_driver;
+      if (data.driver) {
+        lastDriverData = data.driver;
+      }
+
+      checkForCompletedOrder(data);
     })
     .catch(error => {
       console.error('StatusUpdater: Error updating status:', error);
@@ -140,17 +166,65 @@ window.StatusUpdater = (function() {
     console.log('StatusUpdater: Handling status change with data:', data);
 
     updateStatusDisplay(data);
-    updateDriverDisplay(data);
     showChangeNotification(data);
-
     dispatchStatusChangeEvent(data);
+  }
+
+  // Новая функция для проверки корректности отображения водителя
+  function verifyDriverDisplay(data) {
+    if (data.has_driver && data.driver) {
+      // Проверяем, отображается ли блок с водителем
+      const isDriverVisible = driverInfo && !driverInfo.classList.contains('hidden');
+      const isWaitingVisible = waitingDriver && !waitingDriver.classList.contains('hidden');
+
+      console.log('StatusUpdater: Driver display verification:', {
+        hasDriver: data.has_driver,
+        driverData: !!data.driver,
+        driverVisible: isDriverVisible,
+        waitingVisible: isWaitingVisible
+      });
+
+      // Если водитель должен отображаться, но блок скрыт - принудительно показываем
+      if (!isDriverVisible) {
+        console.log('StatusUpdater: Driver should be visible but is hidden, forcing display update');
+        updateDriverDisplay(data);
+
+        // Дополнительная проверка через полсекунды
+        setTimeout(() => {
+          const stillHidden = driverInfo && driverInfo.classList.contains('hidden');
+          if (stillHidden) {
+            console.error('StatusUpdater: Driver info still hidden after forced update');
+            // Последняя попытка
+            showDriverInfo(data.driver);
+          }
+        }, 500);
+      }
+    }
+  }
+
+  function checkForCompletedOrder(data) {
+    console.log('StatusUpdater: Checking for completed order, status:', data.status);
+
+    if (data.status === 'DONE' && config.reviewUrl) {
+      console.log('StatusUpdater: Order completed, redirecting to review page');
+
+      if (window.NotificationManager) {
+        window.NotificationManager.showSuccess('Заказ завершен! Переходим к оценке...');
+      }
+
+      setTimeout(() => {
+        window.location.href = config.reviewUrl;
+      }, 2000);
+
+      stopUpdates();
+    }
   }
 
   function updateStatusDisplay(data) {
     console.log('StatusUpdater: Updating status display:', data.status_display);
 
-    if (statusIcon) statusIcon.textContent = data.status_icon;
-    if (statusText) statusText.textContent = data.status_display;
+    if (statusIcon) statusIcon.textContent = data.status_icon || '📋';
+    if (statusText) statusText.textContent = data.status_display || 'Неизвестно';
 
     if (statusBadge) {
       const colorClasses = ['yellow', 'blue', 'indigo', 'purple', 'green', 'red', 'gray'];
@@ -158,7 +232,8 @@ window.StatusUpdater = (function() {
         statusBadge.classList.remove(`bg-${color}-100`, `text-${color}-800`);
       });
 
-      statusBadge.classList.add(`bg-${data.status_color}-100`, `text-${data.status_color}-800`);
+      const statusColor = data.status_color || 'gray';
+      statusBadge.classList.add(`bg-${statusColor}-100`, `text-${statusColor}-800`);
 
       if (data.status !== config.initialStatus || data.has_driver !== config.hasDriver) {
         statusBadge.style.transform = 'scale(1.05)';
@@ -173,8 +248,14 @@ window.StatusUpdater = (function() {
     console.log('StatusUpdater: Updating driver display');
     console.log('StatusUpdater: has_driver:', data.has_driver);
     console.log('StatusUpdater: driver data:', data.driver);
-    console.log('StatusUpdater: driverInfo element:', driverInfo);
-    console.log('StatusUpdater: waitingDriver element:', waitingDriver);
+
+    if (!driverInfo || !waitingDriver) {
+      console.error('StatusUpdater: Required elements not found', {
+        driverInfo: !!driverInfo,
+        waitingDriver: !!waitingDriver
+      });
+      return;
+    }
 
     if (data.has_driver && data.driver) {
       console.log('StatusUpdater: Showing driver info');
@@ -185,15 +266,16 @@ window.StatusUpdater = (function() {
     }
   }
 
-
   function showDriverInfo(driverData) {
     console.log('StatusUpdater: Showing driver info for:', driverData);
 
     if (!driverInfo || !waitingDriver) {
-      console.error('StatusUpdater: Driver info elements not found', {
-        driverInfo: !!driverInfo,
-        waitingDriver: !!waitingDriver
-      });
+      console.error('StatusUpdater: Driver info elements not found');
+      return;
+    }
+
+    if (!driverData || !driverData.name) {
+      console.error('StatusUpdater: Invalid driver data', driverData);
       return;
     }
 
@@ -210,13 +292,15 @@ window.StatusUpdater = (function() {
     driverInfo.classList.remove('hidden');
     waitingDriver.classList.add('hidden');
 
+    // Проверяем результат
     setTimeout(() => {
-      console.log('StatusUpdater: Display state after driver update:', {
-        driverVisible: !driverInfo.classList.contains('hidden'),
-        waitingVisible: !waitingDriver.classList.contains('hidden'),
-        driverClasses: driverInfo.className,
-        waitingClasses: waitingDriver.className
-      });
+      const isVisible = !driverInfo.classList.contains('hidden');
+      console.log('StatusUpdater: Driver info visibility check:', isVisible);
+
+      if (!isVisible) {
+        console.error('StatusUpdater: Failed to show driver info, trying again');
+        driverInfo.classList.remove('hidden');
+      }
     }, 100);
   }
 
@@ -224,42 +308,32 @@ window.StatusUpdater = (function() {
     console.log('StatusUpdater: Showing waiting state for:', statusData);
 
     if (!driverInfo || !waitingDriver) {
-      console.error('StatusUpdater: Waiting elements not found', {
-        driverInfo: !!driverInfo,
-        waitingDriver: !!waitingDriver
-      });
+      console.error('StatusUpdater: Waiting elements not found');
       return;
     }
 
     const waitingTitle = waitingDriver.querySelector('h3');
     const waitingDescription = waitingDriver.querySelector('p');
 
-    if (waitingTitle) {
+    if (waitingTitle && statusData.status_display) {
       waitingTitle.textContent = statusData.status_display;
-      console.log('StatusUpdater: Updated waiting title to:', statusData.status_display);
     }
-    if (waitingDescription) {
+    if (waitingDescription && statusData.status_description) {
       waitingDescription.textContent = statusData.status_description;
-      console.log('StatusUpdater: Updated waiting description to:', statusData.status_description);
     }
 
     console.log('StatusUpdater: Hiding driver-info, showing waiting-driver');
     driverInfo.classList.add('hidden');
     waitingDriver.classList.remove('hidden');
-
-    setTimeout(() => {
-      console.log('StatusUpdater: Display state after waiting update:', {
-        driverVisible: !driverInfo.classList.contains('hidden'),
-        waitingVisible: !waitingDriver.classList.contains('hidden'),
-        driverClasses: driverInfo.className,
-        waitingClasses: waitingDriver.className
-      });
-    }, 100);
   }
-
 
   function generateDriverHTML(driver) {
     console.log('StatusUpdater: Generating HTML for driver:', driver);
+
+    if (!driver || !driver.name) {
+      console.error('StatusUpdater: Cannot generate HTML for invalid driver data');
+      return '<p class="text-red-500">Ошибка загрузки данных водителя</p>';
+    }
 
     const phoneLink = driver.phone ?
       `<a href="tel:${driver.phone}" class="font-medium text-purple-600 hover:text-purple-700">${driver.phone}</a>` :
@@ -321,13 +395,11 @@ window.StatusUpdater = (function() {
     return html;
   }
 
-
   function showChangeNotification(data) {
-    if (window.NotificationManager) {
+    if (window.NotificationManager && data && data.status_display) {
       window.NotificationManager.showStatusChange(data);
     }
   }
-
 
   function dispatchStatusChangeEvent(data) {
     const event = new CustomEvent('statusChanged', {
@@ -341,7 +413,8 @@ window.StatusUpdater = (function() {
     updateStatus: updateStatus,
     stopUpdates: stopUpdates,
     getCurrentStatus: () => lastKnownStatus,
-    forceSync: initialStatusSync
+    forceSync: initialStatusSync,
+    verifyDriverDisplay: () => verifyDriverDisplay({ has_driver: lastKnownDriverState, driver: lastDriverData })
   };
 
 })();

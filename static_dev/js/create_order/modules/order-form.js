@@ -112,7 +112,22 @@ export class OrderForm {
                 alert('Пожалуйста, дождитесь расчета стоимости поездки');
                 return false;
             }
-            return true;
-        });
+            const scheduledTimeRadio = document.querySelector('input[name="time_type"][value="later"]');
+            if (scheduledTimeRadio && scheduledTimeRadio.checked) {
+                const timeInput = document.getElementById('scheduled-time');
+
+                if (timeInput && timeInput.value) {
+                    const selectedDateTime = new Date(timeInput.value);
+                    const now = new Date();
+                    if (selectedDateTime <= now) {
+                        e.preventDefault();
+                        alert('Время поездки должно быть в будущем. Пожалуйста, выберите корректное время.');
+                        timeInput.focus();
+                        return false;
+                    }
+                }
+                return true;
+            }
+        })
     }
 }

@@ -124,10 +124,14 @@ class CreateOrderView(LoginRequiredMixin, View):
 
             if sig != data.get('order_signature'):
                 LOGGER.error(f'Signature error. Expected: {sig}. Got: {data.get("order_signature")}')
-                return render(request, 'orders/data_corrupted.html')
+                return render(request, "orders/data_corrupted.html")
             if pickup_datetime < current_server_time_utc:
                 LOGGER.error(f'pickup_datetime is older than now: {pickup_datetime} > {current_server_time_utc}')
-                return render(request, 'orders/data_corrupted.html')
+                return render(
+                    request,
+                    "orders/data_corrupted.html",
+                    {"message": "pickup datetime older than now!"}
+                )
 
             pickup_verbose = get_address_coords(data.get('pickup_coords'))
             dropoff_verbose = get_address_coords(data.get('dropoff_coords'))

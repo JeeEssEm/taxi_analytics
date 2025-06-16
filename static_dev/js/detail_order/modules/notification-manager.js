@@ -1,12 +1,37 @@
 window.NotificationManager = (function() {
   'use strict';
 
+  let notificationContainer = null;
+
+  function init() {
+    if (!notificationContainer) {
+      notificationContainer = document.createElement('div');
+      notificationContainer.id = 'notification-container';
+      notificationContainer.className = 'fixed top-4 right-4 z-50 space-y-2 max-w-sm';
+      document.body.appendChild(notificationContainer);
+    }
+  }
+
+  function clearAllNotifications() {
+    if (notificationContainer) {
+      notificationContainer.innerHTML = '';
+    }
+  }
+
   function showStatusChange(data) {
+    // Проверяем, что у нас есть все необходимые данные
+    if (!data || !data.status_display) {
+      console.warn('NotificationManager: Invalid status change data', data);
+      return;
+    }
+
+    init();
+
     const notification = createNotification(`
       <div class="flex items-center space-x-3">
         <div class="flex-shrink-0">
-          <div class="w-8 h-8 bg-${data.status_color}-100 rounded-full flex items-center justify-center">
-            <span class="text-${data.status_color}-600">${data.status_icon}</span>
+          <div class="w-8 h-8 bg-${data.status_color || 'blue'}-100 rounded-full flex items-center justify-center">
+            <span class="text-${data.status_color || 'blue'}-600">${data.status_icon || '📋'}</span>
           </div>
         </div>
         <div>
@@ -20,6 +45,13 @@ window.NotificationManager = (function() {
   }
 
   function showSuccess(message) {
+    if (!message || message === 'undefined' || message === undefined) {
+      console.warn('NotificationManager: Invalid success message', message);
+      return;
+    }
+
+    init();
+
     const notification = createNotification(`
       <div class="flex items-center space-x-3">
         <div class="flex-shrink-0">
@@ -35,6 +67,13 @@ window.NotificationManager = (function() {
   }
 
   function showError(message) {
+    if (!message || message === 'undefined' || message === undefined) {
+      console.warn('NotificationManager: Invalid error message', message);
+      return;
+    }
+
+    init();
+
     const notification = createNotification(`
       <div class="flex items-center space-x-3">
         <div class="flex-shrink-0">
@@ -57,7 +96,7 @@ window.NotificationManager = (function() {
     };
 
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 ${colorClasses[type] || colorClasses.info} border rounded-lg shadow-lg p-4 z-50 transform translate-x-full transition-transform duration-300 max-w-sm`;
+    notification.className = `${colorClasses[type] || colorClasses.info} border rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 relative`;
 
     notification.innerHTML = `
       ${content}
@@ -72,12 +111,19 @@ window.NotificationManager = (function() {
   }
 
   function showNotification(notification) {
-    document.body.appendChild(notification);
+    if (!notificationContainer) {
+      console.error('NotificationManager: Container not initialized');
+      return;
+    }
 
+    notificationContainer.appendChild(notification);
+
+    // Показываем уведомление
     setTimeout(() => {
       notification.classList.remove('translate-x-full');
     }, 100);
 
+    // Автоматически убираем через 5 секунд
     setTimeout(() => {
       if (notification.parentElement) {
         notification.classList.add('translate-x-full');
@@ -93,7 +139,8 @@ window.NotificationManager = (function() {
   return {
     showStatusChange: showStatusChange,
     showSuccess: showSuccess,
-    showError: showError
+    showError: showError,
+    clearAll: clearAllNotifications
   };
 
 })();
