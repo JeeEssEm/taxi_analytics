@@ -111,7 +111,7 @@ class ClientPendingReviewsView(DriverPendingReviewsView):
         context = super().get_context_data(**kwargs)
         context.update({
             'user_role': 'client',
-            'page_title': 'Оценить клиентов',
+            'page_title': 'Оценить водителей',
             'empty_title': 'Все заказы оценены!',
             'empty_description': 'У вас нет заказов, ожидающих оценки',
             'back_url': reverse_lazy("orders:history"),
