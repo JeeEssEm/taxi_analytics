@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}
+    TaxiAnalytics - Главная
+{% endblock %}
+
+{% block head %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block not_centered_content %}
+    <div class="flex flex-col">
+        <!-- Hero секция с фиолетовым градиентом -->
+        <section class="bg-gradient-to-r from-purple-700 to-indigo-800 text-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">Быстрое и безопасное такси</h1>
+                <p class="text-xl md:text-2xl mb-10 max-w-3xl mx-auto opacity-90">Закажите такси за 2 минуты и получите комфортную поездку по лучшей цене в городе</p>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="{% url 'orders:create_order' %}" class="px-8 py-4 bg-white text-purple-700 rounded-full font-bold hover:bg-gray-100 transition duration-300 shadow-lg">
+                        <i class="fas fa-taxi mr-2"></i>Заказать такси
+                    </a>
+                    <a href="{% url 'drivers:new_orders' %}" class="px-8 py-4 border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-purple-700 transition duration-300">
+                        <i class="fas fa-id-card-alt mr-2"></i>Стать водителем
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Как это работает -->
+        <section class="py-16 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Как работает наш сервис</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Карточка 1 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition duration-300 border-t-4 border-purple-500">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">1. Укажите адрес</h3>
+                        <p class="text-gray-600">Введите адрес отправления и назначения в приложении или на сайте</p>
+                    </div>
+
+                    <!-- Карточка 2 -->
+                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition duration-300 border-t-4 border-purple-500">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-800">2. Наслаждайтесь поездкой</h3>
+                        <p class="text-gray-600">Водитель приедет в течение 5-7 минут и довезет вас с комфортом</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Преимущества -->
+        <section class="py-16 bg-gradient-to-br from-gray-50 to-purple-50">
+            <div class="container mx-auto px-6">
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="md:w-1/2 mb-8 md:mb-0">
+                        <div class="relative">
+                            <img src="{% static 'images/daniel.jpg' %}" alt="Такси" class="rounded-lg shadow-xl w-full">
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 md:pl-12">
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">Почему выбирают нас</h2>
+                        <ul class="space-y-6">
+                            <li class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800">Быстрое прибытие (не факт)</h3>
+                                    <p class="text-gray-600">Среднее время подачи автомобиля = <span style="display: inline-block; vertical-align: middle; text-align: center;">lim<span style="display: block; font-size: 0.75em; margin-top: -0.2em;">t→∞</span></span></p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800">Профессиональные водители (опционально)</h3>
+                                    <p class="text-gray-600">Далеко не все водители проходят проверку и обучение</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800">Нечестные цены</h3>
+                                    <p class="text-gray-600">Тарифы, которые динамически меняются</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800">Круглосуточная поддержка</h3>
+                                    <p class="text-gray-600">Наша служба поддержки работает 24/7</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Для водителей -->
+        <section class="py-16 bg-gradient-to-r from-purple-50 to-indigo-50">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Для водителей</h2>
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="md:w-1/2 mb-8 md:mb-0 md:pr-12">
+                        <div class="bg-white p-8 rounded-xl shadow-lg">
+                            <h3 class="text-2xl font-bold mb-4 text-gray-800">Зарабатывайте с нами</h3>
+                            <p class="text-gray-600 mb-6">Присоединяйтесь к нашей команде из 1 человека и получайте доход с экспоненциальным графиком работы.</p>
+                            <ul class="space-y-4 mb-8">
+                                <li class="flex items-center">
+                                    <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 font-medium">Какой-нибудь процент от каждой поездки</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 font-medium">Гибкий график работы</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 font-medium">Мгновенные выплаты</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 font-medium">Ммм... поддержка</span>
+                                </li>
+                            </ul>
+                            <a href="#" class="px-8 py-3 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition inline-block shadow-md">
+                                <i class="fas fa-user-plus mr-2"></i>Зарегистрироваться как водитель
+                            </a>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2">
+                        <img src="{% static 'images/taxi_car.jpg' %}" alt="такси" class="rounded-lg shadow-xl w-full">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Отзывы -->
+        <section class="py-16 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Что мы сами о себе думаем</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Отзыв 1 -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
+                        <div class="flex items-center mb-4">
+                            <img src="{% static 'images/emilienne.webp' %}" alt="Эмильен" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <h4 class="font-bold text-gray-800">Эмильен</h4>
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-600">"Я, конечно, сначала запутался с кнопками... но, к счастью, всё просто! Даже я смог оформить заказ за минуту. А Даниэль — как всегда, на месте через 30 секунд. Рекорд!"</p>
+                    </div>
+
+                    <!-- Отзыв 2 -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
+                        <div class="flex items-center mb-4">
+                            <img src="{% static 'images/zhiber.jpg' %}" alt="Жибер" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <h4 class="font-bold text-gray-800">Комиссар Жибер</h4>
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-600">"Я приказываю всем пользоваться этим сервисом! Быстро, удобно и без бумажной волокиты. Если бы у нас в префектуре всё так работало, я бы уже стал министром."</p>
+                    </div>
+
+                    <!-- Отзыв 3 -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
+                        <div class="flex items-center mb-4">
+                            <img src="{% static 'images/alen.jpg' %}" alt="Ален" class="w-12 h-12 rounded-full mr-4">
+                            <div>
+                                <h4 class="font-bold text-gray-800">Ален</h4>
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-600">"Сервис — огонь. Поездка прошла без заносов, Жибер не пытался рулить, а Эмильен не забыл дома штаны. Рекомендую."</p>
+                    </div>
+                </div>
+
+                <!-- Кнопка для всех отзывов -->
+{#                <div class="text-center mt-12">#}
+{#                    <a href="#" class="px-8 py-3 border-2 border-purple-600 text-purple-600 rounded-full font-bold hover:bg-purple-600 hover:text-white transition inline-block">#}
+{#                        <i class="fas fa-comments mr-2"></i>Все отзывы#}
+{#                    </a>#}
+{#                </div>#}
+            </div>
+        </section>
+    </div>
+{% endblock %}

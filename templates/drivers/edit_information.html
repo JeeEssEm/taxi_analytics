@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Стать таксистом? Идея.
+{% endblock %}
+
+{% block not_centered_content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <!-- Заголовок -->
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-8 py-6">
+      <h1 class="text-2xl font-bold text-white flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+        Изменение информации водителя такси
+      </h1>
+      <p class="text-purple-200 mt-1">Измените информацию о себе и вашем автомобиле</p>
+    </div>
+
+    <!-- Общие ошибки формы -->
+    {% if form.non_field_errors or car_form.non_field_errors %}
+      <div class="mx-8 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex">
+          <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+          </svg>
+          <div>
+            <h3 class="text-sm font-medium text-red-800">Ошибки в форме:</h3>
+            <div class="mt-2 text-sm text-red-700">
+              {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+              {% for error in car_form.non_field_errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Формы -->
+    <div class="p-8">
+      <form method="post" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+
+        <!-- Информация об автомобиле -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Информация об автомобиле
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="{{ car_form.car_manufacture.id_for_label }}" class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Марка автомобиля
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <input name="{{ car_form.car_manufacture.html_name }}"
+                     maxlength="{{ car_form.car_manufacture.max_length }}"
+                     id="{{ car_form.car_manufacture.id_for_label }}"
+                     class="bg-gray-50 border {% if car_form.car_manufacture.errors %}border-red-500{% else %}border-gray-300{% endif %} text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
+                     type="{{ car_form.car_manufacture.field.widget.input_type }}"
+                     value="{{ car_form.car_manufacture.value|default_if_none:'' }}"
+                />
+              </div>
+              {% if car_form.car_manufacture.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in car_form.car_manufacture.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ car_form.car_model.id_for_label }}" class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Модель
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <input name="{{ car_form.car_model.html_name }}"
+                     maxlength="{{ car_form.car_model.max_length }}"
+                     id="{{ car_form.car_model.id_for_label }}"
+                     class="bg-gray-50 border {% if car_form.car_model.errors %}border-red-500{% else %}border-gray-300{% endif %} text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
+                     type="{{ car_form.car_model.field.widget.input_type }}"
+                     value="{{ car_form.car_model.value|default_if_none:'' }}"/>
+              </div>
+              {% if car_form.car_model.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in car_form.car_model.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ car_form.year.id_for_label }}" class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Год выпуска
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <input name="{{ car_form.year.html_name }}"
+                     id="{{ car_form.year.id_for_label }}"
+                     class="bg-gray-50 border {% if car_form.year.errors %}border-red-500{% else %}border-gray-300{% endif %} text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
+                     type="number"
+                     value="{{ car_form.year.value|default:'2025' }}"
+                     min="1900"
+                     max="{% now "Y" %}"
+                     step="1"
+                />
+              </div>
+              {% if car_form.year.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in car_form.year.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ car_form.car_color.id_for_label }}" class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                </svg>
+                Цвет
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                  </svg>
+                </div>
+                <input name="{{ car_form.car_color.html_name }}"
+                     maxlength="{{ car_form.car_color.max_length }}"
+                     id="{{ car_form.car_color.id_for_label }}"
+                     class="bg-gray-50 border {% if car_form.car_color.errors %}border-red-500{% else %}border-gray-300{% endif %} text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
+                     type="{{ car_form.car_color.field.widget.input_type }}"
+                     value="{{ car_form.car_color.value|default_if_none:'' }}"/>
+              </div>
+              {% if car_form.car_color.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in car_form.car_color.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="{{ car_form.plate_number.id_for_label }}" class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                Номерной знак
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                </div>
+                <input name="{{ car_form.plate_number.html_name }}"
+                     maxlength="{{ car_form.plate_number.max_length }}"
+                     id="{{ car_form.plate_number.id_for_label }}"
+                     class="bg-gray-50 border {% if car_form.plate_number.errors %}border-red-500{% else %}border-gray-300{% endif %} text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
+                     type="{{ car_form.plate_number.field.widget.input_type }}"
+                     value="{{ car_form.plate_number.value|default_if_none:'' }}"/>
+              </div>
+              {% if car_form.plate_number.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in car_form.plate_number.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Документы -->
+        <div>
+          <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Документы
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Водительское удостоверение
+              </label>
+              <div class="relative">
+                <input
+                  type="file"
+                  name="{{ form.driver_license.html_name }}"
+                  id="{{ form.driver_license.id_for_label }}"
+                  accept="image/*,application/pdf"
+                  class="block w-full text-sm text-gray-500 border {% if form.driver_license.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-lg
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-medium
+                    file:bg-purple-50 file:text-purple-700
+                    hover:file:bg-purple-100"
+                >
+              </div>
+              <a href="{{ user.taxi.driver_license.url }}" target="_blank"
+                 class="text-purple-600 hover:underline">Просмотреть</a>
+              {% if form.driver_license.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in form.driver_license.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <label class="block text-gray-700 font-medium mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Свидетельство о регистрации ТС
+              </label>
+              <div class="relative">
+                <input
+                  type="file"
+                  name="{{ form.registration_certificate.html_name }}"
+                  id="{{ form.registration_certificate.id_for_label }}"
+                  accept="image/*,application/pdf"
+                  class="block w-full text-sm text-gray-500 border {% if form.registration_certificate.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-lg
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-medium
+                    file:bg-purple-50 file:text-purple-700
+                    hover:file:bg-purple-100"
+                >
+              </div>
+              <a href="{{ user.taxi.registration_certificate.url }}" target="_blank"
+               class="text-purple-600 hover:underline">Просмотреть</a>
+
+              {% if form.registration_certificate.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                  {% for error in form.registration_certificate.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="flex justify-end space-x-4 pt-6">
+          <a href="{% url 'drivers:new_orders' %}" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">
+            Отмена
+          </a>
+          <button type="submit" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition shadow-sm flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Сохранить
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

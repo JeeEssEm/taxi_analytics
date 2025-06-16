@@ -1,0 +1,8 @@
+FROM postgis/postgis:14-3.2
+
+RUN apt-get update && \
+    apt-get install -y curl unzip postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY init_analytics_db.sh /scripts/
+RUN chmod -R +x /scripts/

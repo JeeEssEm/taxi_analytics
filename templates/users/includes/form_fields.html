@@ -1,0 +1,29 @@
+{% for field in form.visible_fields %}
+    <div class="mb-3">
+        {% for error in field.errors %}
+            <div class="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
+                {{ error|escape }}
+            </div>
+        {% endfor %}
+        <div class="mb-4">
+            <label for="{{ field.auto_id }}" class="block text-sm font-medium text-gray-700">
+                {{ field.label }}
+            </label>
+            <input name="{{ field.html_name }}"
+                   maxlength="{{ field.max_length }}"
+                   id="{{ field.id_for_label }}"
+                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                   type="{{ field.field.widget.input_type }}"
+                   placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
+                   value="{{ field.value|default_if_none:'' }}"
+                   {% if field.field.required %}required{% endif %}
+            />
+
+        </div>
+    </div>
+{% endfor %}
+{% for error in form.non_field_errors %}
+    <div class="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
+        {{ error|escape }}
+    </div>
+{% endfor %}

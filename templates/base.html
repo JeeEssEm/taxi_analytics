@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <title>{% block title %}{% endblock %}</title>
+    {% block head %}
+    {% endblock %}
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    {% include "includes/header.html" %}
+
+    <main class="flex-grow w-full">
+        {% block not_centered_content %}
+        {% endblock %}
+        <div class="flex items-center justify-center w-full">
+            <div class="w-full max-w-md px-4 py-8">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full">
+        {% include "includes/footer.html" %}
+    </footer>
+
+    {% block scripts %}
+    {% endblock %}
+    <script src="{% static 'js/burger.js' %}"></script>
+</body>
+</html>

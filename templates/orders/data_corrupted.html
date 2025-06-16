@@ -1,0 +1,10 @@
+{% block title %}
+  Что-то пошло не так
+{% endblock %}
+
+{% block content %}
+  <h1>Данные заказа повреждены. Сделайте заказ снова, пожалуйста</h1>
+  {% if message %}
+    <h3>{{ message }}</h3>
+  {% endif %}
+{% endblock %}

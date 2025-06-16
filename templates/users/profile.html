@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% load sorl_thumbnail %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block not_centered_content %}
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-5">
+        <div class="left-8 flex items-start flex-col md:flex-row md:items-end">
+          {% thumbnail user.image "128x128" crop="center" as img %}
+            <img
+                    id="avatar-preview"
+                    src="{{ img.url }}"
+                    alt="Текущий аватар"
+                    class="w-24 h-24 rounded-full object-cover border-2 border-gray-200">
+          {% empty %}
+            <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" fill="currentColor"
+                 class="bi bi-person-circle text-secondary" viewBox="0 0 16 16">
+              <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path>
+              <path fill-rule="evenodd"
+                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"></path>
+            </svg>
+          {% endthumbnail %}
+
+          {% if current_user.id == request.user.id %}
+            <div class="ml-4 mb-2">
+              <a
+                      href="{% url 'users:edit_profile' pk=request.user.id %}"
+                      class="px-4 py-2 bg-white text-purple-600 border border-purple-600 rounded-lg font-medium hover:bg-purple-50 transition flex items-center shadow-sm hover:bg-purple-600 hover:text-white hover:border-purple-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Редактировать
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Основная информация -->
+      <div class="pt-10 px-8 pb-8">
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-800">
+            {{ current_user.last_name }} {{ current_user.first_name }} {{ current_user.middle_name|default:'' }}
+          </h1>
+          <p class="text-gray-500 mt-1">Участник с {{ current_user.date_joined|date:"d.m.Y" }}</p>
+        </div>
+
+        {% if request.user.id == pk %}
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div>
+          <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              Контактная информация
+            </h2>
+
+            <div class="space-y-4">
+              <div>
+                <p class="text-sm text-gray-500">Email</p>
+                <p class="font-medium text-gray-800">{{ user.email }}</p>
+              </div>
+
+              <div>
+                <p class="text-sm text-gray-500">Телефон</p>
+                <p class="font-medium text-gray-800">
+                  {{ user.phone|default:'Не указан' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div>
+          <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600"
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Статистика поездок
+            </h2>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white rounded-lg p-4 text-center shadow">
+                <p class="text-3xl font-bold text-purple-600">{{ trip_summary.total_count }}</p>
+                <p class="text-sm text-gray-500">Всего поездок</p>
+              </div>
+
+              <div class="bg-white rounded-lg p-4 text-center shadow">
+                <p class="text-3xl font-bold text-purple-600">{{ trip_summary.total_distance }}</p>
+                <p class="text-sm text-gray-500">Пройдено км</p>
+              </div>
+
+              <div class="bg-white rounded-lg p-4 text-center shadow">
+                <p class="text-3xl font-bold text-purple-600">{{ rating }}</p>
+                <p class="text-sm text-gray-500">Ваш рейтинг</p>
+              </div>
+
+              <div class="bg-white rounded-lg p-4 text-center shadow">
+                <p class="text-3xl font-bold text-purple-600">{{ trip_summary.total_duration }}</p>
+                <p class="text-sm text-gray-500">Времени в пути (минут)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+        </div>
+      </div>
+    </div>
+    {% if request.user.id == pk %}
+      <div>
+        <form action="{% url 'users:logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-8 py-3 w-full mt-10 text-center bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition inline-block shadow-md">
+            Выйти из аккаунта
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

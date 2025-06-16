@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head %}
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block not_centered_content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ page_title }}</h1>
+        <p class="text-gray-600">
+          {% if pending_orders %}
+            {{ page_obj.paginator.count }} заказ{{ page_obj.paginator.count|pluralize:"а,ов" }} ожида{{ page_obj.paginator.count|pluralize:"ет,ют" }} вашей оценки
+          {% else %}
+            {{ empty_description }}
+          {% endif %}
+        </p>
+      </div>
+      <a href="{{ back_url }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition duration-300 flex items-center space-x-2">
+        <i class="fas fa-arrow-left"></i>
+        <span>{{ back_text }}</span>
+      </a>
+    </div>
+  </div>
+
+  {% if pending_orders %}
+  <div class="space-y-4">
+    {% for order in pending_orders %}
+    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+      
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <div class="flex items-center space-x-3 mb-2">
+            <h3 class="text-lg font-semibold text-gray-800">Заказ #{{ order.id }}</h3>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                         {% if order.status == 'DONE' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+              {% if order.status == 'DONE' %}
+                <i class="fas fa-check mr-1"></i>Завершен
+              {% else %}
+                <i class="fas fa-times mr-1"></i>Отменен
+              {% endif %}
+            </span>
+          </div>
+          <p class="text-sm text-gray-500">{{ order.created_at|date:"d.m.Y в H:i" }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xl font-bold text-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600">{{ order.total }} ₽</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-2">
+          <div class="space-y-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-3 h-3 bg-blue-500 rounded-full flex-shrink-0"></div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm text-gray-500">Откуда</p>
+                <p class="text-gray-800 font-medium truncate">{{ order.pickup_verbose }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+              <div class="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm text-gray-500">Куда</p>
+                <p class="text-gray-800 font-medium truncate">{{ order.dropoff_verbose }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-4 text-sm text-gray-600 pt-2">
+              <span><i class="fas fa-route mr-1"></i>{{ order.trip_distance_km }} км</span>
+              <span>•</span>
+              <span><i class="fas fa-clock mr-1"></i>{{ order.expected_duration|floatformat:0 }} мин</span>
+              <span>•</span>
+              <span><i class="fas fa-users mr-1"></i>{{ order.passenger_count }} чел.</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          {% if user_role == 'driver' %}
+          <div class="text-center">
+            <p class="text-sm text-gray-500 mb-2">Клиент</p>
+            {% if order.client.image %}
+            <img src="{{ order.client.image.url }}" alt="Фото клиента" class="w-16 h-16 rounded-full object-cover mx-auto mb-2">
+            {% else %}
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-2">
+              {{ order.client.first_name.0|upper }}{{ order.client.last_name.0|upper }}
+            </div>
+            {% endif %}
+            <p class="font-semibold text-gray-800">{{ order.client.get_full_name }}</p>
+            <p class="text-sm text-gray-600">
+              {% if order.payment_type == 0 %}💳 Карта{% else %}💵 Наличные{% endif %}
+            </p>
+          </div>
+          {% else %}
+          <div class="text-center">
+            <p class="text-sm text-gray-500 mb-2">Водитель</p>
+            {% if order.driver.user.image %}
+            <img src="{{ order.driver.user.image.url }}" alt="Фото водителя" class="w-16 h-16 rounded-full object-cover mx-auto mb-2">
+            {% else %}
+            <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-2">
+              {{ order.driver.user.first_name.0|upper }}{{ order.driver.user.last_name.0|upper }}
+            </div>
+            {% endif %}
+            <p class="font-semibold text-gray-800">{{ order.driver.user.get_full_name }}</p>
+            {% if order.car %}
+            <p class="text-sm text-gray-600">{{ order.car.car_manufacture }} {{ order.car.car_model }}</p>
+            <p class="text-xs text-gray-500">{{ order.car.plate_number }}</p>
+            {% endif %}
+          </div>
+          {% endif %}
+          
+          <div class="space-y-2">
+            <a href="{% url 'reviews:review' pk=order.id %}"
+               class="w-full bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 hover:bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-700 text-white py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2">
+              <i class="fas fa-star"></i>
+              <span>Оценить</span>
+            </a>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div class="mt-8">
+    <nav class="flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" 
+           class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200 flex items-center space-x-1">
+          <i class="fas fa-chevron-left"></i>
+          <span>Предыдущая</span>
+        </a>
+        {% endif %}
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" 
+           class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200 flex items-center space-x-1">
+          <span>Следующая</span>
+          <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      
+      <div class="text-sm text-gray-500">
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+      </div>
+    </nav>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-16">
+    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <i class="fas fa-check-circle text-green-600 text-4xl"></i>
+    </div>
+    <h3 class="text-2xl font-medium text-gray-900 mb-2">{{ empty_title }}</h3>
+    <p class="text-gray-500 mb-8">{{ empty_description }}</p>
+    <a href="{{ back_url }}"
+       class="bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-600 hover:bg-{% if user_role == 'driver' %}blue{% else %}purple{% endif %}-700 text-white px-6 py-3 rounded-lg transition duration-300 inline-flex items-center space-x-2">
+      <i class="fas fa-arrow-left"></i>
+      <span>{{ back_text }}</span>
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,2 @@
+class RouteCannotBeBuiltException(Exception):
+    pass
