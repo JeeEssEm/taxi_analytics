@@ -3,7 +3,6 @@ import random
 import datetime
 from django.core.management.base import BaseCommand
 from django.db import transaction
-import pytz
 
 from orders.models import TaxiOrder
 from users.models import TaxiUser
@@ -187,6 +186,8 @@ class Command(BaseCommand):
         )
 
     def register_random_order(self, status: TaxiOrder.StatusChoices, pickup_datetime):
+        flip_coin = random.randint(1, 3)
+
         user = random.choice(
             TaxiUser.objects.filter(taxi__isnull=True).all())
         driver = random.choice(TaxiDriver.objects.all())
@@ -202,31 +203,53 @@ class Command(BaseCommand):
         def coords_to_string(coords: list[2]):
             return f"{coords[0]},{coords[1]}"
 
-        
         trip_distance_km = random.randint(1,20)
         expected_duration = random.randint(5,120)
         # order = get_order_summary(coords_to_string(
         #     pickup_coords), coords_to_string(dropoff_coords), 1)
-
-        return TaxiOrder.objects.create(
-            driver=driver,
-            car=driver.car,
-            client=user,
-
-            status=status,
-
-            pickup_datetime=pickup_datetime,
-            pickup_coords=Point(pickup_coords, srid=4326),
-
-            dropoff_datetime=pickup_datetime +
-            datetime.timedelta(minutes=expected_duration),
-            dropoff_coords=Point(dropoff_coords, srid=4326),
-
-            payment_type = random.randint(0,1),
-            extra=0,
-            total=random.randint(300,2000),
-
-            passenger_count=1,
-            trip_distance_km=trip_distance_km,
-            expected_duration=expected_duration,
-        )
+        if flip_coin == 1:  # висящий заказ
+            return TaxiOrder.objects.create(
+                client=user,
+                status="PENDING",
+                pickup_datetime=pickup_datetime,
+                pickup_coords=Point(pickup_coords, srid=4326),
+                payment_type = random.randint(0,1),
+                extra=0,
+                total=random.randint(300,2000),
+                passenger_count=1,
+                trip_distance_km=trip_distance_km,
+                expected_duration=expected_duration,
+            )
+        if flip_coin == 2:  # в работе
+            return TaxiOrder.objects.create(
+                client=user,
+                driver=driver,
+                car=driver.car,
+                status=random.choice(["WAITING_FOR_DRIVER", "ON_THE_WAY"]),
+                pickup_datetime=pickup_datetime,
+                pickup_coords=Point(pickup_coords, srid=4326),
+                payment_type = random.randint(0,1),
+                extra=0,
+                total=random.randint(300,2000),
+                passenger_count=1,
+                trip_distance_km=trip_distance_km,
+                expected_duration=expected_duration,
+            )
+        if flip_coin == 3:  # завершен
+            return TaxiOrder.objects.create(
+                driver=driver,
+                car=driver.car,
+                client=user,
+                status=random.choice(["DONE", "CANCELLED"]),
+                pickup_datetime=pickup_datetime,
+                pickup_coords=Point(pickup_coords, srid=4326),
+                dropoff_datetime=pickup_datetime +
+                datetime.timedelta(minutes=expected_duration),
+                dropoff_coords=Point(dropoff_coords, srid=4326),
+                payment_type = random.randint(0,1),
+                extra=0,
+                total=random.randint(300,2000),
+                passenger_count=1,
+                trip_distance_km=trip_distance_km,
+                expected_duration=expected_duration,
+            )
